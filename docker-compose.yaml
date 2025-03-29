@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    container_name: db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: api
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8000"
+    networks:
+      - backend
+
+  client:
+    build: ./client
+    container_name: client
+    restart: always
+    depends_on:
+      - api
+    volumes:
+      - ./client:/app
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend
+
+  data-unit:
+    build: 
+      context: ./data-unit
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN} 
+    container_name: data-unit
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - ./data-unit/dagster-app:/dagster-app
+      - ./data-unit/dagster-home:/dagster-home
+    ports:
+      - "3001:3001"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
+
+volumes:
+  postgres_data:

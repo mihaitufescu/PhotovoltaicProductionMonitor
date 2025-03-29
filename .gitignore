@@ -1,0 +1,8 @@
+.env
+datavenv/
+venv/
+node_modules/
+*.pyc
+__pycache__/
+api/apiapp/migrations
+.vscode/
