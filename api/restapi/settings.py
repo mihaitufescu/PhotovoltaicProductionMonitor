@@ -27,7 +27,7 @@ ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -47,6 +47,12 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'restapi.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 TEMPLATES = [
     {
@@ -76,6 +82,8 @@ DATABASES = {
         'PORT': os.getenv('PORT_DB'),
     }
 }
+
+AUTH_USER_MODEL = 'apiapp.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
