@@ -12,5 +12,7 @@ urlpatterns = [
     path('login/', views.CustomTokenObtainPairView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('user/<int:user_id>/update/', views.UpdateUserView.as_view(), name='user-update'),
-    path('test-jwt/', views.TestJWTUserView.as_view(), name='test-jwt'),
+    path('user/<int:user_id>/get/', views.GetUserByIdView.as_view(), name='get-user-by-id'),
+    path('user/delete_current_user/', views.DeleteCurrentUserView.as_view(), name='delete-current-user'),
+    path('get-jwt/', views.GetJWTUserView.as_view(), name='test-jwt'),
 ]

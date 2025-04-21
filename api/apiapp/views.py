@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
+from rest_framework.views import APIView
 from .models import User
 from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer
 from django.core.mail import send_mail
@@ -108,7 +109,7 @@ class UpdateUserView(generics.UpdateAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class TestJWTUserView(generics.CreateAPIView):
+class GetJWTUserView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -122,3 +123,25 @@ class TestJWTUserView(generics.CreateAPIView):
             "is_superuser": user.is_superuser,
             "is_email_confirmed": user.is_email_confirmed
         })
+    
+class GetUserByIdView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    serializer_class = UserUpdateSerializer
+    lookup_url_kwarg = 'user_id'
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({
+            "message": "User fetched successfully.",
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
+    
+class DeleteCurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response({"message": "User account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
