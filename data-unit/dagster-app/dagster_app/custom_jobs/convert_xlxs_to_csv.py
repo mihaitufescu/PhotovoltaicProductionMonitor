@@ -18,7 +18,7 @@ def convert_xlxs_to_csv(load_path: str) -> str:
     csv_save_path = load_path.replace("Inverter ","")
     csv_save_path = csv_save_path.replace(".xlsx", ".csv")
 
-    df = pd.read_excel(load_path)
+    df = pd.read_excel(load_path, header=1)
     df.to_csv(csv_save_path, index=False)
 
     print(f"✅ Excel to CSV conversion done: {csv_save_path}")
