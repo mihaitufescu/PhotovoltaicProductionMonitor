@@ -44,3 +44,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+class PlantData(models.Model):
+    plant_id = models.BigIntegerField()
+    plant_name = models.CharField(max_length=100)
+    inverter_name = models.CharField(max_length=100)
+    total_string_capacity_kwp = models.FloatField()
+    yield_kwh = models.FloatField()
+    total_yield_kwh = models.FloatField()
+    specific_energy_kwh_per_kwp = models.FloatField()
+    peak_ac_power_kw = models.FloatField()
+    grid_connection_duration_h = models.FloatField()
+
+    def __str__(self):
+        return f"{self.plant_id} - {self.plant_name} - {self.device_name}"

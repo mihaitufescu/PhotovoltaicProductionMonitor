@@ -6,5 +6,4 @@ node_modules/
 __pycache__/
 api/apiapp/migrations
 .vscode/
-../data-unit/dagster-home/history/
-../data-unit/dagster-home/logs/
+dagster-home/
