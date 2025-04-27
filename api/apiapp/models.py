@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
@@ -55,6 +56,8 @@ class PlantData(models.Model):
     specific_energy_kwh_per_kwp = models.FloatField()
     peak_ac_power_kw = models.FloatField()
     grid_connection_duration_h = models.FloatField()
+    read_date = models.DateField(default=timezone.now)
+    load_date = models.DateField(default=timezone.now)
 
     def __str__(self):
         return f"{self.plant_id} - {self.plant_name} - {self.device_name}"
