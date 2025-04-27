@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import psycopg2
+from datetime import date
 
 def csv_db_write(csv_path: str, plant_id: int = 1):
     df = pd.read_csv(csv_path)
@@ -24,10 +25,14 @@ def csv_db_write(csv_path: str, plant_id: int = 1):
         total_yield_kwh,
         specific_energy_kwh_per_kwp,
         peak_ac_power_kw,
-        grid_connection_duration_h
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        grid_connection_duration_h,
+        load_date,
+        read_date
+        
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
+    today = date.today()
     for _, row in df.iterrows():
         cur.execute(insert_query, (
             plant_id,
@@ -39,6 +44,8 @@ def csv_db_write(csv_path: str, plant_id: int = 1):
             row["Specific Energy (kWh/kWp)"],
             row["Peak AC Power (kW)"],
             row["Grid Connection Duration (h)"],
+            today,  # read_date
+            today,
         ))
 
     conn.commit()
