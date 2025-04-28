@@ -46,9 +46,9 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
-        <h2 className="text-4xl font-bold mb-8 text-center text-green-700">Create Your Account</h2>
+        <h2 className="text-4xl font-semibold text-green-900 mb-6 text-center md:text-left">Create Your Account</h2>
 
         {error && (
           <div className="mb-6 px-4 py-3 bg-red-100 text-red-700 rounded-lg border border-red-300 text-center">
