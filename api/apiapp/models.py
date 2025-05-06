@@ -61,3 +61,15 @@ class PlantData(models.Model):
 
     def __str__(self):
         return f"{self.plant_id} - {self.plant_name} - {self.device_name}"
+    
+class UserPlant(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_plants")
+    plant = models.ForeignKey(PlantData, on_delete=models.CASCADE, related_name="plant_users")
+    added_on = models.DateTimeField(auto_now_add=True)
+    active = models.BooleanField()
+
+    class Meta:
+        unique_together = ('user', 'plant')
+
+    def __str__(self):
+        return f"{self.user.email} - {self.plant.plant_name}"

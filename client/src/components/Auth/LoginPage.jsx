@@ -1,19 +1,19 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../../services/api";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setMessage("");
@@ -25,8 +25,14 @@ const LoginPage = () => {
       return;
     }
 
-    // TODO: Add actual login API call here
-    setMessage("✅ Login submitted! (API call coming soon...)");
+    try {
+      await loginUser({ email, password });
+      setMessage("✅ Login successful!");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("❌ Invalid credentials or server error.");
+    }
   };
 
   return (
