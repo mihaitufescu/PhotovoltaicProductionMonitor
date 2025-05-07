@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/api";
+import { useDispatch } from 'react-redux';
+import { login } from '../../redux/slices/authSlice';
+
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -8,6 +11,7 @@ const LoginPage = () => {
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -26,12 +30,12 @@ const LoginPage = () => {
     }
 
     try {
-      await loginUser({ email, password });
-      setMessage("✅ Login successful!");
-      navigate("/dashboard");
+        await dispatch(login({ email, password })).unwrap();
+        setMessage("✅ Login successful!");
+        navigate("/dashboard");
     } catch (err) {
-      console.error(err);
-      setError("❌ Invalid credentials or server error.");
+        console.error(err);
+        setError("❌ Invalid credentials or server error.");
     }
   };
 

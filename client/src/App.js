@@ -6,9 +6,18 @@ import LoginPage from "./components/Auth/LoginPage";
 import Navbar from "./components/Navbar";
 import HomePage from "./components/HomePage";
 import Dashboard from "./components/Dashboard";
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { fetchCurrentUser } from './redux/slices/authSlice';
 
 
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
+
   return (
     <Router>
       <Navbar />

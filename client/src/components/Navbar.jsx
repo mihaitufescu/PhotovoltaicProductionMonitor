@@ -1,31 +1,49 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../redux/slices/authSlice';
 
 const Navbar = () => {
+  const { user } = useSelector((state) => state.auth);
+  console.log("Navbar user:", user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await dispatch(logout());
+    navigate('/login');
+  };
+
   return (
     <nav className="bg-gradient-to-r from-green-600 via-green-500 to-green-600 shadow-md border-b-2 border-green-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 rounded-b-md">
-          {/* Left side - Links */}
           <div className="flex items-center space-x-6">
-            {[
-              { to: "/", label: "Home" },
-              { to: "/register", label: "Register" },
-              { to: "/login", label: "Login" },
-              { to: "/about", label: "About" },
-            ].map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                className="relative text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300"
-              >
-                {label}
-                <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-green-200 transition-all duration-300 hover:w-full"></span>
-              </Link>
-            ))}
+            <Link to="/" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
+              Home
+            </Link>
+            {!user && (
+              <>
+                <Link to="/register" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
+                  Register
+                </Link>
+                <Link to="/login" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
+                  Login
+                </Link>
+              </>
+            )}
+            <Link to="/about" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
+              About
+            </Link>
           </div>
-
-          {/* Right side (future space for buttons, profile, etc.) */}
-          <div>{/* Placeholder for future logged-in user controls */}</div>
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="text-white font-semibold bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md transition-colors duration-300"
+            >
+              Logout
+            </button>
+          )}
         </div>
       </div>
     </nav>
