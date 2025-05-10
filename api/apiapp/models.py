@@ -84,6 +84,7 @@ class PlantSettings(models.Model):
     plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='settings')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='plant_settings')
     ingestion_type = models.CharField(max_length=10, choices=INGESTION_TYPES)
+    plant_name = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -109,3 +110,18 @@ class AwsIngestionSettings(models.Model):
 
     def __str__(self):
         return f"AWS Config for {self.plant.plant_name}"
+    
+class AlarmPlant(models.Model):
+    METRIC_TYPES = [
+        ('yield', 'Yield (kWh)'),
+        ('power', 'Peak AC Power (kW)'),
+        ('specific_energy', 'Specific Energy (kWh/kWp)'),
+    ]
+
+    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='alarm_settings')
+    threshold_value = models.FloatField()
+    metric_type = models.CharField(max_length=50, choices=METRIC_TYPES)
+    last_alarm_triggered = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Alarm for {self.plant.plant_name} - {self.metric_type}"

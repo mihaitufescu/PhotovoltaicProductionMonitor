@@ -1,16 +1,40 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getUserPlantSettings } from "../services/api";
 
 const ConfigurePlants = () => {
-  const [ingestionType, setIngestionType] = useState("api");
+    const [plants, setPlants] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [ingestionType, setIngestionType] = useState("api");
+    const [error, setError] = useState("");
+    // DELETE UPDATE on each Plant Setting will be required. alongside filtering and searching via plant name
+    useEffect(() => {
+    const fetchPlants = async () => {
+    try {
+        const data = await getUserPlantSettings();
 
-  // Placeholder plants list
-  const plants = [
-    { id: 1, name: "Plant A", ingestion: "API Key", threshold: "90%" },
-    { id: 2, name: "Plant B", ingestion: "AWS S3", threshold: "85%" },
-    { id: 3, name: "Plant C", ingestion: "API Key", threshold: "88%" },
-    { id: 4, name: "Plant D", ingestion: "AWS S3", threshold: "80%" },
-  ];
+        const transformed = data.map((item, index) => ({
+        id: index + 1, // since response doesn't include plant ID
+        name: item.plant_name || "Unnamed Plant",
+        ingestion: item.ingestion_type === "API" ? "API Key" : "AWS S3",
+        threshold: item.alarm?.threshold_value
+            ? `${item.alarm.threshold_value * 100}%`
+            : "N/A",
+        }));
 
+        setPlants(transformed);
+    } catch (err) {
+        console.error("Failed to fetch plant settings:", err);
+        setError("Failed to load plant settings.");
+    } finally {
+        setLoading(false);
+    }
+    };
+
+    fetchPlants();
+}, []);
+
+  if (loading) return <p className="text-gray-600">Loading plant settings...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-4xl font-bold text-purple-800 mb-6">Configure Plant</h1>

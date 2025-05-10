@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import User, PlantSettings, AlarmPlant
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -12,7 +13,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -41,3 +42,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'city': {'required': False},
             'country': {'required': False},
         }
+
+class PlantSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlantSettings
+        fields = ['plant_name', 'ingestion_type', 'created_at']
+
+class AlarmPlantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AlarmPlant
+        fields = ['threshold_value', 'metric_type', 'last_alarm_triggered']

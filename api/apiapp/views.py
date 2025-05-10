@@ -2,8 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
-from .models import User, UserPlant
-from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer
+from .models import User, UserPlant, PlantSettings, AlarmPlant
+from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSettingsSerializer, AlarmPlantSerializer
 from django.core.mail import send_mail
 from .utils import generate_confirmation_link
 from django.utils.http import urlsafe_base64_decode
@@ -168,3 +168,31 @@ class PlantOverviewAPIView(APIView):
             "active": active,
             "inactive": inactive
         })
+    
+class UserAllPlantSettingsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if not user:
+            return Response({"error": "You are not authorized to access this data."}, status=status.HTTP_403_FORBIDDEN)
+
+        plant_settings = PlantSettings.objects.filter(user=user).select_related('plant')
+        
+        if not plant_settings:
+            return Response({"error": "No plant settings found for this user."}, status=status.HTTP_404_NOT_FOUND)
+
+        plant_settings_data = []
+
+        for setting in plant_settings:
+            # Directly fetch the related AlarmPlant for this setting (one-to-one relation)
+            alarm = AlarmPlant.objects.get(plant=setting.plant)  # Using get() because it's one-to-one
+            alarm_data = AlarmPlantSerializer(alarm).data
+
+            # Add the alarm data to the plant settings data
+            setting_data = PlantSettingsSerializer(setting).data
+            setting_data['alarm'] = alarm_data  # Add alarm directly to the settings data
+            plant_settings_data.append(setting_data)
+
+        return Response(plant_settings_data, status=status.HTTP_200_OK)

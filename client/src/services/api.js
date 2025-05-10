@@ -37,4 +37,9 @@ export const getPlantOverview = async () => {
   return res.data;
 };
 
+export const getUserPlantSettings = async () => {
+  const res = await API.get('/api/user/get-all-plant-settings/');
+  return res.data;
+};
+
 export default API;
