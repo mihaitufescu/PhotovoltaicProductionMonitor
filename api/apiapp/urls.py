@@ -16,4 +16,5 @@ urlpatterns = [
     path('user/<int:user_id>/get/', views.GetUserByIdView.as_view(), name='get-user-by-id'),
     path('user/delete_current_user/', views.DeleteCurrentUserView.as_view(), name='delete-current-user'),
     path('get-jwt/', views.GetJWTUserView.as_view(), name='test-jwt'),
+    path('plant-overview/', views.PlantOverviewAPIView.as_view(), name='plant-overview')
 ]

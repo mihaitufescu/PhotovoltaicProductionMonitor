@@ -1,3 +1,4 @@
+import secrets
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import (
@@ -73,3 +74,38 @@ class UserPlant(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.plant.plant_name}"
+    
+class PlantSettings(models.Model):
+    INGESTION_TYPES = [
+        ('API', 'API Key'),
+        ('AWS', 'AWS File System'),
+    ]
+
+    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='settings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='plant_settings')
+    ingestion_type = models.CharField(max_length=10, choices=INGESTION_TYPES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.plant.plant_name} - {self.ingestion_type}"
+
+class ApiKeyIngestionSettings(models.Model):
+    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='api_settings')
+    api_key = models.CharField(max_length=128, unique=True, default=secrets.token_urlsafe)
+    expiration_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"API Key for {self.plant.plant_name}"
+    
+class AwsIngestionSettings(models.Model):
+    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='aws_settings')
+    bucket_name = models.CharField(max_length=255)
+    region = models.CharField(max_length=100)
+    access_key_id = models.CharField(max_length=255)
+    secret_access_key = models.CharField(max_length=255)
+    file_prefix = models.CharField(max_length=255, blank=True, help_text="Optional path prefix inside the bucket")
+    polling_interval_minutes = models.PositiveIntegerField(default=60)
+
+    def __str__(self):
+        return f"AWS Config for {self.plant.plant_name}"

@@ -6,6 +6,7 @@ import LoginPage from "./components/Auth/LoginPage";
 import Navbar from "./components/Navbar";
 import HomePage from "./components/HomePage";
 import Dashboard from "./components/Dashboard";
+import ConfigurePlants from "./components/ConfigurePlants";
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from './redux/slices/authSlice';
@@ -27,6 +28,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/configure-plants" element={<ConfigurePlants />} />
       </Routes>
     </Router>
   );

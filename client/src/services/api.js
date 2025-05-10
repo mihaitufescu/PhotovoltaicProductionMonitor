@@ -32,4 +32,9 @@ export const logoutUser = async (navigateCallback) => {
   }
 };
 
+export const getPlantOverview = async () => {
+  const res = await API.get('/api/plant-overview/');
+  return res.data;
+};
+
 export default API;

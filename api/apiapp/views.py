@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
-from .models import User
+from .models import User, UserPlant
 from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer
 from django.core.mail import send_mail
 from .utils import generate_confirmation_link
@@ -152,3 +152,19 @@ class DeleteCurrentUserView(APIView):
         user = request.user
         user.delete()
         return Response({"message": "User account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    
+class PlantOverviewAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        total = UserPlant.objects.filter(user=user).count()
+        active = UserPlant.objects.filter(user=user, active=True).count()
+        inactive = UserPlant.objects.filter(user=user, active=False).count()
+
+        return Response({
+            "total_plants": total,
+            "active": active,
+            "inactive": inactive
+        })
