@@ -1,11 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
 
 const Navbar = () => {
   const { user } = useSelector((state) => state.auth);
-  console.log("Navbar user:", user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
+from django.contrib.auth.hashers import make_password
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -47,10 +48,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-class PlantData(models.Model):
-    plant_id = models.BigIntegerField()
+class Plant(models.Model):
+    INGESTION_TYPES = [
+        ('API', 'API Key'),
+        ('AWS', 'AWS File System'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='plant_settings')
+    ingestion_type = models.CharField(max_length=10, choices=INGESTION_TYPES)
     plant_name = models.CharField(max_length=100)
-    inverter_name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    devices_count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.plant_name} - {self.ingestion_type}"
+
+class PlantData(models.Model):
+    plant_id = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name='plant_data')
     total_string_capacity_kwp = models.FloatField()
     yield_kwh = models.FloatField()
     total_yield_kwh = models.FloatField()
@@ -62,37 +76,27 @@ class PlantData(models.Model):
 
     def __str__(self):
         return f"{self.plant_id} - {self.plant_name} - {self.device_name}"
-    
-class UserPlant(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_plants")
-    plant = models.ForeignKey(PlantData, on_delete=models.CASCADE, related_name="plant_users")
-    added_on = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField()
 
-    class Meta:
-        unique_together = ('user', 'plant')
-
-    def __str__(self):
-        return f"{self.user.email} - {self.plant.plant_name}"
     
-class PlantSettings(models.Model):
-    INGESTION_TYPES = [
-        ('API', 'API Key'),
-        ('AWS', 'AWS File System'),
+class Device(models.Model):
+    DEVICE_TYPES = [
+        ('inverter', 'Inverter'),
+        ('meter', 'Meter'),
+        ('sensor', 'Sensor'),
     ]
 
-    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='settings')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='plant_settings')
-    ingestion_type = models.CharField(max_length=10, choices=INGESTION_TYPES)
-    plant_name = models.CharField(max_length=100, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name='devices')
+    name = models.CharField(max_length=100)
+    serial_number = models.CharField(max_length=100, blank=True)
+    device_type = models.CharField(max_length=50, choices=DEVICE_TYPES)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.plant.plant_name} - {self.ingestion_type}"
+        return f"{self.name} ({self.device_type}) - {self.plant.plant_name}"
 
 class ApiKeyIngestionSettings(models.Model):
-    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='api_settings')
-    api_key = models.CharField(max_length=128, unique=True, default=secrets.token_urlsafe)
+    plant = models.OneToOneField(Plant, on_delete=models.CASCADE, related_name='api_settings')
+    api_key = models.CharField(max_length=256, blank=True)
     expiration_date = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
@@ -100,7 +104,7 @@ class ApiKeyIngestionSettings(models.Model):
         return f"API Key for {self.plant.plant_name}"
     
 class AwsIngestionSettings(models.Model):
-    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='aws_settings')
+    plant = models.OneToOneField(Plant, on_delete=models.CASCADE, related_name='aws_settings')
     bucket_name = models.CharField(max_length=255)
     region = models.CharField(max_length=100)
     access_key_id = models.CharField(max_length=255)
@@ -118,7 +122,7 @@ class AlarmPlant(models.Model):
         ('specific_energy', 'Specific Energy (kWh/kWp)'),
     ]
 
-    plant = models.OneToOneField(PlantData, on_delete=models.CASCADE, related_name='alarm_settings')
+    plant = models.OneToOneField(Plant, on_delete=models.CASCADE, related_name='alarm_settings')
     threshold_value = models.FloatField()
     metric_type = models.CharField(max_length=50, choices=METRIC_TYPES)
     last_alarm_triggered = models.DateTimeField(null=True, blank=True)

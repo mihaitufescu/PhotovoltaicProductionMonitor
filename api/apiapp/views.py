@@ -2,8 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
-from .models import User, UserPlant, PlantSettings, AlarmPlant
-from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSettingsSerializer, AlarmPlantSerializer
+from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings
+from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer
 from django.core.mail import send_mail
 from .utils import generate_confirmation_link
 from django.utils.http import urlsafe_base64_decode
@@ -153,46 +153,22 @@ class DeleteCurrentUserView(APIView):
         user.delete()
         return Response({"message": "User account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     
-class PlantOverviewAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class CreatePlantView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = PlantSerializer(data=request.data)
 
-    def get(self, request):
-        user = request.user
+        if serializer.is_valid():
+            plant, api_key = serializer.save(user=request.user)
 
-        total = UserPlant.objects.filter(user=user).count()
-        active = UserPlant.objects.filter(user=user, active=True).count()
-        inactive = UserPlant.objects.filter(user=user, active=False).count()
+            response_data = {
+                "message": "Plant created successfully",
+                "plant_id": plant.id,
+            }
 
-        return Response({
-            "total_plants": total,
-            "active": active,
-            "inactive": inactive
-        })
-    
-class UserAllPlantSettingsView(APIView):
-    permission_classes = [IsAuthenticated]
+            if api_key:
+                response_data["api_key"] = api_key
 
-    def get(self, request):
-        user = request.user
+            return Response(response_data, status=status.HTTP_201_CREATED)
 
-        if not user:
-            return Response({"error": "You are not authorized to access this data."}, status=status.HTTP_403_FORBIDDEN)
-
-        plant_settings = PlantSettings.objects.filter(user=user).select_related('plant')
-        
-        if not plant_settings:
-            return Response({"error": "No plant settings found for this user."}, status=status.HTTP_404_NOT_FOUND)
-
-        plant_settings_data = []
-
-        for setting in plant_settings:
-            # Directly fetch the related AlarmPlant for this setting (one-to-one relation)
-            alarm = AlarmPlant.objects.get(plant=setting.plant)  # Using get() because it's one-to-one
-            alarm_data = AlarmPlantSerializer(alarm).data
-
-            # Add the alarm data to the plant settings data
-            setting_data = PlantSettingsSerializer(setting).data
-            setting_data['alarm'] = alarm_data  # Add alarm directly to the settings data
-            plant_settings_data.append(setting_data)
-
-        return Response(plant_settings_data, status=status.HTTP_200_OK)
+        # Return error if validation fails
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

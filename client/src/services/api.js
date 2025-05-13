@@ -32,14 +32,24 @@ export const logoutUser = async (navigateCallback) => {
   }
 };
 
-export const getPlantOverview = async () => {
-  const res = await API.get('/api/plant-overview/');
-  return res.data;
-};
-
-export const getUserPlantSettings = async () => {
-  const res = await API.get('/api/user/get-all-plant-settings/');
-  return res.data;
+export const createPlant = async (payload) => {
+  try {
+    const response = await axios.post('api/create-plant/', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('Plant created:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating plant:', error);
+    if (error.response) {
+      console.log('Response Error:', error.response);
+      alert('There was an issue with the request. Please check the data and try again.');
+    } else {
+      console.log('Request Error:', error.message);
+    }
+  }
 };
 
 export default API;
