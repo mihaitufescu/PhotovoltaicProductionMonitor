@@ -19,4 +19,9 @@ urlpatterns = [
     path('create-plant/', views.CreatePlantView.as_view(), name='create_plant'),
     path('get-plants-overview/', views.PlantOverviewAPIView.as_view(), name='plant-overview'),
     path('delete-plant/<int:plant_id>/', views.DeletePlantAPIView.as_view()),
+    path('update-plant/<int:plant_id>/', views.UpdatePlantAPIView.as_view(), name='update-plant'),
+    path('get-devices-by-plant/<int:plant_id>/', views.GetDevicesByPlantAPIView.as_view()),
+    path('add-device/', views.AddDeviceByPlantAPIView.as_view()),
+    path('update-device/<int:device_id>/', views.UpdateDeviceByPlantAPIView.as_view()),
+    path('delete-device/<int:device_id>/', views.DeleteDeviceByPlantAPIView.as_view()),
 ]

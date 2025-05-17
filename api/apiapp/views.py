@@ -2,8 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
-from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings
-from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer
+from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device
+from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer,GetPlantSerializer, GetDeviceSerializer, DeviceCreateUpdateSerializer
 from django.core.mail import send_mail
 from .utils import generate_confirmation_link
 from django.utils.http import urlsafe_base64_decode
@@ -200,3 +200,66 @@ class DeletePlantAPIView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Plant.DoesNotExist:
             return Response({'error': 'Plant not found or unauthorized'}, status=404)
+        
+
+class UpdatePlantAPIView(APIView):
+    def patch(self, request, plant_id):
+        try:
+            plant = Plant.objects.get(id=plant_id, user=request.user)
+        except Plant.DoesNotExist:
+            return Response({'error': 'Plant not found or unauthorized'}, status=404)
+        serializer = GetPlantSerializer(plant, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GetDevicesByPlantAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, plant_id):
+        try:
+            plant = Plant.objects.get(id=plant_id)
+        except Plant.DoesNotExist:
+            return Response({"error": "Plant not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        devices = Device.objects.filter(plant=plant)
+        if not devices:
+            return Response({"error": "Devices associated to plant not found"}, status=status.HTTP_404_NOT_FOUND)
+        serialized_devices = GetDeviceSerializer(devices, many = True)
+        return Response(serialized_devices.data, status=status.HTTP_200_OK)
+
+class AddDeviceByPlantAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = DeviceCreateUpdateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UpdateDeviceByPlantAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, device_id):
+        try:
+            device = Device.objects.get(id=device_id)
+        except Device.DoesNotExist:
+            return Response({"error": "Device not found"}, status=status.HTTP_404_NOT_FOUND)
+        serialized_device = DeviceCreateUpdateSerializer(device, data=request.data, partial=True)
+        if serialized_device.is_valid():
+            serialized_device.save()
+            return Response(serialized_device.data, status=status.HTTP_200_OK)
+        return Response(serialized_device.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DeleteDeviceByPlantAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, device_id):
+        try:
+            device = Device.objects.get(id=device_id)
+        except Device.DoesNotExist:
+            return Response({"error": "Device not found"}, status=status.HTTP_404_NOT_FOUND)
+        device.delete()
+        return Response({"message": "Device deleted"}, status=status.HTTP_204_NO_CONTENT)

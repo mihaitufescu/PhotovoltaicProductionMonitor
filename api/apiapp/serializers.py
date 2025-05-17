@@ -85,7 +85,8 @@ class PlantSerializer(serializers.ModelSerializer):
         # Create Devices
         for device_data in devices_data:
             Device.objects.create(plant=plant, **device_data)
-
+        plant.devices_count = len(devices_data)
+        plant.save()
         # Create Alarm if provided
         if alarm_data:
             AlarmPlant.objects.create(plant=plant, **alarm_data)
@@ -115,6 +116,13 @@ class GetDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
         fields = ['id', 'name', 'serial_number', 'device_type', 'is_active']
+
+class DeviceCreateUpdateSerializer(serializers.ModelSerializer):
+    plant = serializers.PrimaryKeyRelatedField(queryset=Plant.objects.all())
+
+    class Meta:
+        model = Device
+        fields = ['id', 'plant', 'name', 'serial_number', 'device_type', 'is_active']
 
 class GetAlarmSerializer(serializers.ModelSerializer):
     class Meta:

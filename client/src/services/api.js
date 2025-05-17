@@ -72,4 +72,29 @@ export const deletePlant = async (plantId) => {
   }
 };
 
+export const updatePlant = async (plantId, payload) => {
+  const response = await API.patch(`/api/update-plant/${plantId}/`, payload);
+  return response.data;
+};
+
+export const getDevicesByPlant = async (plantId) => {
+  const response = await API.get(`/api/get-devices-by-plant/${plantId}/`);
+  return response.data;
+};
+
+export const addDevice = async (deviceData) => {
+  const response = await API.post(`/api/add-device/`, deviceData);
+  return response.data;
+};
+
+export const updateDevice = async (deviceId, deviceData) => {
+  const response = await API.put(`/api/update-device/${deviceId}/`, deviceData);
+  return response.data;
+};
+
+export const deleteDevice = async (deviceId) => {
+  const response = await API.delete(`/api/delete-device/${deviceId}/`);
+  return response.data;
+};
+
 export default API;
