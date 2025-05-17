@@ -52,4 +52,24 @@ export const createPlant = async (payload) => {
   }
 };
 
+export const getPlantOverview = async () => {
+  try {
+    const response = await API.get('/api/get-plants-overview/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching plant overview:', error);
+    throw error;
+  }
+};
+
+export const deletePlant = async (plantId) => {
+  try {
+    const response = await API.delete(`/api/delete-plant/${plantId}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting plant:', error);
+    throw error;
+  }
+};
+
 export default API;

@@ -5,23 +5,6 @@ const Dashboard = () => {
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-4xl font-bold text-green-900 mb-6">Dashboard</h1>
-
-      {/* Overview Section (optional placeholder) */}
-      {/* <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Overview</h2>
-        <div className="mt-4">
-          <p className="text-lg">
-            Number of Plants: <span className="font-bold">--</span>
-          </p>
-          <p className="text-lg">
-            Active Plants: <span className="font-bold">--</span>
-          </p>
-          <p className="text-lg">
-            Inactive Plants: <span className="font-bold">--</span>
-          </p>
-        </div>
-      </div> */}
-
       {/* Configure plants Section */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
         <h2 className="text-2xl font-semibold text-gray-700">Configure plants data ingestion</h2>
@@ -34,6 +17,22 @@ const Dashboard = () => {
             className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
             Go to Configuration
+          </Link>
+        </div>
+      </div>
+
+      {/* Plants Overview Section */}
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-2xl font-semibold text-gray-700">Plants Overview</h2>
+        <div className="mt-4">
+          <p className="text-gray-600 mb-4">
+            View all your plants, devices, and alarm settings in a single place.
+          </p>
+          <Link
+            to="/plants-overview"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
+          >
+            Go to Overview
           </Link>
         </div>
       </div>

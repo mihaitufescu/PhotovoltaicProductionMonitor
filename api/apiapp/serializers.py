@@ -105,3 +105,23 @@ class PlantSerializer(serializers.ModelSerializer):
             AwsIngestionSettings.objects.create(plant=plant, **aws_data)
 
         return plant, api_key
+    
+class GetPlantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Plant
+        fields = ['id', 'plant_name', 'ingestion_type', 'created_at', 'devices_count']
+
+class GetDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Device
+        fields = ['id', 'name', 'serial_number', 'device_type', 'is_active']
+
+class GetAlarmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AlarmPlant
+        fields = ['id','threshold_value', 'metric_type', 'last_alarm_triggered']
+
+class PlantOverviewSerializer(serializers.Serializer):
+    plant = GetPlantSerializer()
+    devices = GetDeviceSerializer(many=True)
+    alarm_settings = GetAlarmSerializer(allow_null=True)

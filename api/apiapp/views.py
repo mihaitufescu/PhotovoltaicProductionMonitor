@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
 from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings
-from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer
+from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer
 from django.core.mail import send_mail
 from .utils import generate_confirmation_link
 from django.utils.http import urlsafe_base64_decode
@@ -154,6 +154,7 @@ class DeleteCurrentUserView(APIView):
         return Response({"message": "User account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     
 class CreatePlantView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
         serializer = PlantSerializer(data=request.data)
 
@@ -172,3 +173,30 @@ class CreatePlantView(APIView):
 
         # Return error if validation fails
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class PlantOverviewAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user_plants = Plant.objects.filter(user=request.user)
+        overview_list = []
+        for plant in user_plants:
+            serializer = PlantOverviewSerializer({
+                "plant": plant,
+                "devices": plant.devices.all(),
+                "alarm_settings": getattr(plant, 'alarm_settings', None)
+            })
+            overview_list.append(serializer.data)
+
+        return Response(overview_list)
+    
+
+class DeletePlantAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, plant_id):
+        try:
+            plant = Plant.objects.get(id=plant_id, user=request.user)
+            plant.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Plant.DoesNotExist:
+            return Response({'error': 'Plant not found or unauthorized'}, status=404)

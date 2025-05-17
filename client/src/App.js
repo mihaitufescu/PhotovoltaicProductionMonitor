@@ -6,6 +6,7 @@ import LoginPage from "./components/Auth/LoginPage";
 import Navbar from "./components/Navbar";
 import HomePage from "./components/HomePage";
 import Dashboard from "./components/Dashboard";
+import PlantOverview from './components/PlantOverview';
 import ConfigurePlants from "./components/ConfigurePlants";
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
@@ -29,6 +30,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/configure-plants" element={<ConfigurePlants />} />
+        <Route path="/plants-overview" element={<PlantOverview />} />
       </Routes>
     </Router>
   );
