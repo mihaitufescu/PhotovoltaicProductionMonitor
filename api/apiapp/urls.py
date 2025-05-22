@@ -24,4 +24,5 @@ urlpatterns = [
     path('add-device/', views.AddDeviceByPlantAPIView.as_view()),
     path('update-device/<int:device_id>/', views.UpdateDeviceByPlantAPIView.as_view()),
     path('delete-device/<int:device_id>/', views.DeleteDeviceByPlantAPIView.as_view()),
+    path('plants/<int:plant_id>/ingest/', views.PlantDataIngestionView.as_view(), name='plant-data-ingestion'),
 ]

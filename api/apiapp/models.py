@@ -64,7 +64,7 @@ class Plant(models.Model):
         return f"{self.plant_name} - {self.ingestion_type}"
 
 class PlantData(models.Model):
-    plant_id = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name='plant_data')
+    plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name='plant_data')
     total_string_capacity_kwp = models.FloatField()
     yield_kwh = models.FloatField()
     total_yield_kwh = models.FloatField()

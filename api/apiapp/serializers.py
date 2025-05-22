@@ -3,6 +3,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, Plant, AlarmPlant, Device, ApiKeyIngestionSettings, AwsIngestionSettings
 import hashlib
 import secrets
+from django.contrib.auth.hashers import make_password
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -92,10 +93,10 @@ class PlantSerializer(serializers.ModelSerializer):
             AlarmPlant.objects.create(plant=plant, **alarm_data)
         api_key = None
         if validated_data['ingestion_type'] == 'API':
-            api_key = secrets.token_urlsafe(64)  # Generate a random API key
+            api_key = secrets.token_urlsafe(16)  # Generate a random API key
 
             # Hash the API key before saving it to the database
-            hashed_api_key = hashlib.sha256(api_key.encode('utf-8')).hexdigest()
+            hashed_api_key = make_password(api_key)
 
             # Create the API Ingestion Settings with the hashed key
             api_key_settings = ApiKeyIngestionSettings.objects.create(plant=plant, api_key=hashed_api_key)

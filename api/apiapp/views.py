@@ -1,19 +1,29 @@
+import io
+import logging
+import csv
+import hashlib
+import requests
+import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
-from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device
+from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device, PlantData
 from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer,GetPlantSerializer, GetDeviceSerializer, DeviceCreateUpdateSerializer
 from django.core.mail import send_mail
 from .utils import generate_confirmation_link
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.hashers import check_password
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.utils.timezone import now
 from datetime import timedelta
+import yaml
+
+logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -117,7 +127,6 @@ class UpdateUserView(generics.UpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class GetJWTUserView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
@@ -263,3 +272,131 @@ class DeleteDeviceByPlantAPIView(APIView):
             return Response({"error": "Device not found"}, status=status.HTTP_404_NOT_FOUND)
         device.delete()
         return Response({"message": "Device deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
+class PlantDataIngestionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, plant_id):
+        api_key = request.headers.get('X-API-KEY')
+
+        if not api_key:
+            return Response({"error": "API key missing"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            api_settings = ApiKeyIngestionSettings.objects.select_related('plant').get(plant_id=plant_id, is_active=True)
+            if not check_password(api_key, api_settings.api_key):
+                raise ValueError("Invalid API key")
+        except Exception:
+            return Response({"error": "Invalid or inactive API key"}, status=status.HTTP_403_FORBIDDEN)
+        
+        content_type = request.content_type
+        file_type = None
+        try:
+            if content_type == 'application/json':
+                entry = request.data.get('data')
+                file_type = 'json'
+            elif content_type in ['text/csv', 'multipart/form-data']:
+                file = request.FILES.get('file')
+                if not file:
+                    return Response({"error": "CSV file not provided"}, status=status.HTTP_400_BAD_REQUEST)
+                decoded_file = file.read().decode('utf-8')
+                csv_reader = csv.DictReader(io.StringIO(decoded_file))
+                entry = next(csv_reader, None)
+                file_type = 'csv'
+            else:
+                return Response({"error": "Unsupported content type"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if not entry:
+                return Response({"error": "No data provided"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if 'plant_id' not in entry:
+                entry['plant_id'] = plant_id
+
+            # Build variables dict for mutation
+            execution_params = {
+                "selector": {
+                    "jobName": "file_ingestion_pipeline",
+                    "repositoryName": "__repository__",
+                    "repositoryLocationName": "dagster_app",
+                    "assetSelection": [],
+                    "assetCheckSelection": []
+                },
+                "runConfigData": yaml.safe_dump({
+                    "ops": {
+                        "ingest_file_asset": {
+                           "config": {
+                                "file_data": json.dumps(entry),
+                                "file_type": file_type
+                            }
+                        }
+                    }
+                }),
+                "mode": "default",
+                "executionMetadata": {
+                    "tags": []
+                }
+            }
+
+            mutation = """
+            mutation LaunchPipelineExecution($executionParams: ExecutionParams!) {
+              launchPipelineExecution(executionParams: $executionParams) {
+                __typename
+                ... on LaunchRunSuccess {
+                  run {
+                    runId
+                    pipelineName
+                    __typename
+                  }
+                  __typename
+                }
+                ... on RunConfigValidationInvalid {
+                  errors {
+                    message
+                    __typename
+                  }
+                  __typename
+                }
+                ... on PythonError {
+                  message
+                  stack
+                  __typename
+                }
+              }
+            }
+            """
+
+            dagster_graphql_url = "http://data-unit:3001/graphql"
+            headers = {'Content-Type': 'application/json'}
+
+            payload = {
+                "query": mutation,
+                "variables": {
+                    "executionParams": execution_params
+                }
+            }
+
+            response = requests.post(
+                dagster_graphql_url,
+                headers=headers,
+                data=json.dumps(payload)
+            )
+
+            dagster_response = response.json()
+
+            # Check if there are errors inside the data response
+            data_resp = dagster_response.get('data', {})
+            launch_resp = data_resp.get('launchPipelineExecution', {})
+
+            if 'errors' in dagster_response:
+                return Response({"error": "Failed to trigger Dagster job", "details": dagster_response['errors']}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            if launch_resp.get('__typename') != 'LaunchRunSuccess':
+                # Return errors from validation or python errors in the mutation response
+                return Response({"error": "Dagster job failed", "details": launch_resp}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({
+                "message": "Successfully triggered Dagster job",
+                "dagster_response": launch_resp
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
