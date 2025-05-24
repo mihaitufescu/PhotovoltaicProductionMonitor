@@ -14,7 +14,7 @@ const Dashboard = () => {
           </p>
           <Link
             to="/configure-plants"
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
             Go to Configuration
           </Link>
@@ -37,11 +37,27 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Plants Ingestion Section */}
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-2xl font-semibold text-gray-700">Ingest data for plants</h2>
+        <div className="mt-4">
+          <p className="text-gray-600 mb-4">
+            View all your plants and upload availble data.
+          </p>
+          <Link
+            to="/plants-ingestion"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
+          >
+            Go to plant ingestion
+          </Link>
+        </div>
+      </div>
+
       {/* Solar Yield Button */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
         <h2 className="text-2xl font-semibold text-gray-700">Today's Solar Yield</h2>
         <div className="mt-4">
-          <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">
+          <button className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
             View Today's Yield
           </button>
         </div>
@@ -51,7 +67,7 @@ const Dashboard = () => {
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
         <h2 className="text-2xl font-semibold text-gray-700">Set Threshold</h2>
         <div className="mt-4">
-          <button className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600">
+          <button className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
             Set Yield Threshold
           </button>
         </div>

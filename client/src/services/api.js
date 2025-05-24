@@ -97,4 +97,19 @@ export const deleteDevice = async (deviceId) => {
   return response.data;
 };
 
+export const uploadPlantData = async (plantId, file) => {
+  if (!file) throw new Error("No file provided");
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await API.post(`/api/plants/${plantId}/ingest/`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+};
+
 export default API;
