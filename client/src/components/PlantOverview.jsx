@@ -4,6 +4,7 @@ import { deletePlant } from '../services/api';
 import { getPlantOverview, updatePlant } from '../services/api';
 import DeviceManagerModal from './Modals/DeviceManagerModal';
 import { Pencil, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const PlantOverview = () => {
   const [plants, setPlants] = useState([]);
@@ -11,6 +12,7 @@ const PlantOverview = () => {
   const [selectedPlantId, setSelectedPlantId] = useState(null);
   const [editingPlantId, setEditingPlantId] = useState(null);
   const [newPlantName, setNewPlantName] = useState('');
+  const navigate = useNavigate();
 
   const handleDeletePlant = async (plantId) => {
     if (!window.confirm('Are you sure you want to delete this plant?')) return;
@@ -90,7 +92,7 @@ const PlantOverview = () => {
             </h3>
             {/* <p><strong>ID:</strong> {plantObj.plant.id}</p> */}
             <p><strong>Ingestion Type:</strong> {plantObj.plant.ingestion_type}</p>
-            <p><strong>Devices Count:</strong> {plantObj.plant.devices_count}</p>
+            {/* <p><strong>Devices Count:</strong> {plantObj.plant.devices_count}</p> */}
 
             <div className="mt-2">
               <strong>Devices:</strong>
@@ -126,10 +128,10 @@ const PlantOverview = () => {
                 </button>
 
                 <button
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded-lg text-sm"
-                    disabled
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm"
+                  onClick={() => navigate(`/plants-dashboard/${plantObj.plant.id}`)}
                 >
-                    Data Analytics (Coming Soon)
+                  Data Analytics
                 </button>
 
                 <button

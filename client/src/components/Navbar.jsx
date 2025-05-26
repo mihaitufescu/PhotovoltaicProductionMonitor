@@ -30,9 +30,14 @@ const Navbar = () => {
               About
             </Link>
             {user && (
+              <>
               <Link to="/dashboard" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
                 Dashboard
               </Link>
+              <Link to="/estimate-pv" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
+                Production estimator
+              </Link>
+              </>
             )}
           </div>
 

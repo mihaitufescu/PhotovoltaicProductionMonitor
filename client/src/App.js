@@ -9,6 +9,8 @@ import Dashboard from "./components/Dashboard";
 import PlantOverview from './components/PlantOverview';
 import ConfigurePlants from "./components/ConfigurePlants";
 import PlantIngestion from "./components/PlantIngestion";
+import PlantDashboardWrapper from './components/PlantDashboardWrapper';
+import PvEstimation from './components/PvEstimation';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from './redux/slices/authSlice';
@@ -30,9 +32,11 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/estimate-pv" element={<PvEstimation />} />
         <Route path="/configure-plants" element={<ConfigurePlants />} />
         <Route path="/plants-overview" element={<PlantOverview />} />
         <Route path="/plants-ingestion" element={<PlantIngestion />} />
+        <Route path="/plants-dashboard/:plantId" element={<PlantDashboardWrapper />} />
       </Routes>
     </Router>
   );

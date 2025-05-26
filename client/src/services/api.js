@@ -5,6 +5,31 @@ const API = axios.create({
   withCredentials: true,
 });
 
+API.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+      try {
+        await axios.post('/api/refresh-cookie/', {}, { withCredentials: true });
+        return API(originalRequest); // retry original request
+      } catch (refreshError) {
+        console.error("Refresh token expired or invalid");
+        // Redirect to login if refresh fails
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export const registerUser = async (userData) => {
   return await API.post('/api/register/', userData);
 };
@@ -110,6 +135,26 @@ export const uploadPlantData = async (plantId, file) => {
   });
 
   return response.data;
+};
+
+export const getPlantDashboardData = async (plantId) => {
+  try {
+    const response = await API.get(`/api/plants/${plantId}/get_data/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching plant dashboard data:', error);
+    throw error;
+  }
+};
+
+export const getPvEstimation = async (payload) => {
+  try {
+    const response = await API.post('/api/get-pv-estimation/', payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching PV estimation:', error);
+    throw error;
+  }
 };
 
 export default API;

@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken
 from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device, PlantData
 from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer,GetPlantSerializer, GetDeviceSerializer, DeviceCreateUpdateSerializer
 from django.core.mail import send_mail
@@ -16,13 +17,14 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.hashers import check_password
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.utils.timezone import now
 from datetime import timedelta
 import yaml
 from django.db.models import Q
+from django.db.models import Avg, Sum, Max, Count
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,32 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             secure=False,
             samesite='Lax',
             expires=now() + timedelta(days=7)
+        )
+
+        return res
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh = request.COOKIES.get('refresh_token')
+        if not refresh:
+            return Response({'detail': 'No refresh token provided'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            serializer = self.get_serializer(data={'refresh': refresh})
+            serializer.is_valid(raise_exception=True)
+        except InvalidToken:
+            return Response({'detail': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        access = serializer.validated_data['access']
+        res = Response({'message': 'Access token refreshed'})
+
+        res.set_cookie(
+            key='access_token',
+            value=access,
+            httponly=True,
+            secure=False,  # Set to True in production
+            samesite='Lax',
+            expires=now() + timedelta(minutes=30)
         )
 
         return res
@@ -552,3 +580,88 @@ class PlantCustomDataIngestionView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class PlantGetData(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, plant_id):
+        try:
+            plant = Plant.objects.get(id=plant_id)
+            plant_name = plant.plant_name
+        except Plant.DoesNotExist:
+            plant_name = "Unknown Plant"
+        data_qs = PlantData.objects.filter(plant_id=plant_id).order_by('read_date')
+
+        # Prepare data for charting
+        histogram_data = {
+            "dates": [entry.read_date.strftime("%Y-%m-%d") for entry in data_qs],
+            "yield_kwh": [entry.yield_kwh for entry in data_qs],
+            "specific_energy": [entry.specific_energy_kwh_per_kwp for entry in data_qs],
+            "peak_ac_power_kw": [entry.peak_ac_power_kw for entry in data_qs],
+            "grid_connection_duration_h": [entry.grid_connection_duration_h for entry in data_qs],
+        }
+
+        # Summary stats (optional for dashboard header)
+        stats_summary = data_qs.aggregate(
+            total_yield_kwh=Sum("yield_kwh"),
+            avg_specific_energy=Avg("specific_energy_kwh_per_kwp"),
+            max_peak_power=Max("peak_ac_power_kw"),
+            total_grid_duration=Sum("grid_connection_duration_h"),
+        )
+
+        device_counts = (
+            Device.objects.filter(plant_id=plant_id, is_active=True)
+            .values('device_type')
+            .annotate(count=Count('id'))
+        )
+
+        # Structure device count response
+        device_summary = {
+            device['device_type']: device['count']
+            for device in device_counts
+        }
+
+        return Response({
+            "plant_name": plant_name,
+            "histogram_data": histogram_data,
+            "summary": stats_summary,
+            "device_summary": device_summary,
+        })
+    
+class PlantPvEstimation(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            lat = request.data.get("latitude")
+            lon = request.data.get("longitude")
+            num_panels = request.data.get("number_of_panels")
+            panel_power_kw = request.data.get("panel_power_kw")
+
+            if num_panels and panel_power_kw:
+                peak_power = float(num_panels) * float(panel_power_kw)
+            else:
+                # Fall back to direct peak_power input
+                peak_power = float(request.data.get("peak_power", 5.0))
+            tilt = float(request.data.get("tilt", 30))               
+            azimuth = float(request.data.get("azimuth", 0))          
+            losses = float(request.data.get("losses", 14))           
+
+            # Call PVGIS API
+            pvgis_url = "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc"
+            params = {
+                "lat": lat,
+                "lon": lon,
+                "peakpower": peak_power,
+                "loss": losses,
+                "angle": tilt,
+                "aspect": azimuth,
+                "outputformat": "json"
+            }
+            response = requests.get(pvgis_url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            return Response(data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
