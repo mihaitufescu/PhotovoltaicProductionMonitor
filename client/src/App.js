@@ -11,6 +11,7 @@ import ConfigurePlants from "./components/ConfigurePlants";
 import PlantIngestion from "./components/PlantIngestion";
 import PlantDashboardWrapper from './components/PlantDashboardWrapper';
 import PvEstimation from './components/PvEstimation';
+import PlantAggregateReport from './components/PlantAggregateReport';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from './redux/slices/authSlice';
@@ -37,6 +38,7 @@ function App() {
         <Route path="/plants-overview" element={<PlantOverview />} />
         <Route path="/plants-ingestion" element={<PlantIngestion />} />
         <Route path="/plants-dashboard/:plantId" element={<PlantDashboardWrapper />} />
+        <Route path="/aggregated_report" element={<PlantAggregateReport />} />
       </Routes>
     </Router>
   );

@@ -128,7 +128,7 @@ const PlantOverview = () => {
                 </button>
 
                 <button
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm"
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
                   onClick={() => navigate(`/plants-dashboard/${plantObj.plant.id}`)}
                 >
                   Data Analytics

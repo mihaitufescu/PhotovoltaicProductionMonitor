@@ -25,6 +25,7 @@ from datetime import timedelta
 import yaml
 from django.db.models import Q
 from django.db.models import Avg, Sum, Max, Count
+from django.db.models.functions import TruncWeek, TruncMonth, TruncYear
 
 logger = logging.getLogger(__name__)
 
@@ -415,13 +416,13 @@ class PlantDataIngestionView(APIView):
             launch_resp = data_resp.get('launchPipelineExecution', {})
 
             if 'errors' in dagster_response:
-                return Response({"error": "Failed to trigger Dagster job", "details": dagster_response['errors']}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({"error": "Failed to trigger processing job", "details": dagster_response['errors']}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             if launch_resp.get('__typename') != 'LaunchRunSuccess':
                 # Return errors from validation or python errors in the mutation response
-                return Response({"error": "Dagster job failed", "details": launch_resp}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({"error": "Processing job failed", "details": launch_resp}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             return Response({
-                "message": "Successfully triggered Dagster job",
+                "message": "Successfully triggered processing job",
                 "dagster_response": launch_resp
             }, status=status.HTTP_201_CREATED)
 
@@ -433,10 +434,7 @@ class PlantCustomDataIngestionView(APIView):
         api_key = request.headers.get('X-API-KEY')
         if not api_key:
             return Response({"error": "Missing API key"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 2. Find plant_id by API key (customize based on your model)
         try:
-            # Fetch only active, non-expired API keys
             today = now()
             valid_keys = ApiKeyIngestionSettings.objects.filter(
                 is_active=True
@@ -645,7 +643,10 @@ class PlantPvEstimation(APIView):
                 peak_power = float(request.data.get("peak_power", 5.0))
             tilt = float(request.data.get("tilt", 30))               
             azimuth = float(request.data.get("azimuth", 0))          
-            losses = float(request.data.get("losses", 14))           
+            losses = float(request.data.get("losses", 14))
+            elevation = request.data.get("elevation", 0)
+            year_min = request.data.get("year_min", 2005)
+            year_max = request.data.get("year_max", 2023)           
 
             # Call PVGIS API
             pvgis_url = "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc"
@@ -656,7 +657,10 @@ class PlantPvEstimation(APIView):
                 "loss": losses,
                 "angle": tilt,
                 "aspect": azimuth,
-                "outputformat": "json"
+                "outputformat": "json",
+                "elevation" : elevation,
+                "start_year" : year_min,
+                "end_year" : year_max
             }
             response = requests.get(pvgis_url, params=params)
             response.raise_for_status()
@@ -665,3 +669,45 @@ class PlantPvEstimation(APIView):
             return Response(data)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class AggregatedPlantDataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # Only consider data for plants belonging to the current user
+        plant_data = PlantData.objects.filter(plant__user=user)
+
+        def aggregate_by(time_trunc):
+            truncated = time_trunc('read_date')
+            return (
+                plant_data
+                .annotate(period=truncated)
+                .values('period')
+                .order_by('period')
+                .annotate(
+                    total_yield_kwh=Sum('yield_kwh'),
+                    avg_specific_energy=Avg('specific_energy_kwh_per_kwp'),
+                    max_peak_ac_power=Sum('peak_ac_power_kw'),
+                    total_grid_connection=Sum('grid_connection_duration_h'),
+                )
+            )
+
+        def aggregate_all_time():
+            return plant_data.aggregate(
+                total_yield_kwh=Sum('yield_kwh'),
+                avg_specific_energy=Avg('specific_energy_kwh_per_kwp'),
+                max_peak_ac_power=Sum('peak_ac_power_kw'),
+                total_grid_connection=Sum('grid_connection_duration_h'),
+            )
+
+        response_data = {
+            "weekly": list(aggregate_by(TruncWeek)),
+            "monthly": list(aggregate_by(TruncMonth)),
+            "yearly": list(aggregate_by(TruncYear)),
+            "all_time": aggregate_all_time()
+        }
+
+        return Response(response_data)
+    

@@ -26,9 +26,6 @@ const Navbar = () => {
             <Link to="/" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
               Home
             </Link>
-            <Link to="/about" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
-              About
-            </Link>
             {user && (
               <>
               <Link to="/dashboard" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">

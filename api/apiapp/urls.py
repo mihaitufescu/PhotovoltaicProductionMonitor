@@ -29,4 +29,5 @@ urlpatterns = [
     path('plants/custom_ingest/', views.PlantCustomDataIngestionView.as_view(), name='plant-custom-data-ingestion'),
     path('plants/<int:plant_id>/get_data/', views.PlantGetData.as_view(), name='plant-get-data'),
     path('get-pv-estimation/', views.PlantPvEstimation.as_view(), name='plant-pv-estimation'),
+    path('aggregated-report/', views.AggregatedPlantDataView.as_view(), name='aggregated-report'),
 ]

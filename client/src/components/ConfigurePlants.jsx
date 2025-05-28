@@ -76,14 +76,14 @@ const ConfigurePlants = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow">
-      <h1 className="text-3xl font-bold text-purple-700 mb-4">Add New Plant</h1>
+    <div className="max-w-2xl mx-auto p-6 mt-6 bg-white rounded shadow">
+      <h1 className="text-3xl font-bold text-700 mb-4">Add New Plant</h1>
 
       {message && <p className="mb-4 text-sm text-green-600">{message}</p>}
       {api_key && (
         <div className="mb-4 p-3 bg-purple-100 border rounded">
           <p className="font-semibold">Your API Key (save it securely):</p>
-          <code className="text-sm text-purple-800 break-all">{api_key}</code>
+          <code className="text-sm text-black-800 break-all">{api_key}</code>
         </div>
       )}
 

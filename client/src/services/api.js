@@ -149,10 +149,30 @@ export const getPlantDashboardData = async (plantId) => {
 
 export const getPvEstimation = async (payload) => {
   try {
-    const response = await API.post('/api/get-pv-estimation/', payload);
+    const flattenedPayload = {
+      latitude: payload.inputs.location.latitude,
+      longitude: payload.inputs.location.longitude,
+      elevation: payload.inputs.location.elevation,
+      tilt: payload.inputs.mounting_system.fixed.slope,
+      azimuth: payload.inputs.mounting_system.fixed.azimuth,
+      losses: payload.inputs.pv_module.system_loss,
+      peak_power: payload.inputs.pv_module.peak_power
+    };
+    console.log(flattenedPayload)
+    const response = await API.post('/api/get-pv-estimation/', flattenedPayload);
     return response.data;
   } catch (error) {
     console.error('Error fetching PV estimation:', error);
+    throw error;
+  }
+};
+
+export const getPlantAggregates = async () => {
+  try {
+    const response = await API.get('/api/aggregated-report/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching plant aggregate data:', error);
     throw error;
   }
 };

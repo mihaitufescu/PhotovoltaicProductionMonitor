@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import {
   Cpu,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getPlantDashboardData } from '../../services/api';
+import dayjs from 'dayjs';
 
 const NoDataFallback = () => {
   const navigate = useNavigate();
@@ -41,42 +42,57 @@ const deviceIcons = {
 const PlantDashboard = ({ plantId }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('365d');
 
   useEffect(() => {
     const fetchData = async () => {
-        try {
+      try {
         const dashboard = await getPlantDashboardData(plantId);
         setData(dashboard);
-        } catch (error) {
+      } catch (error) {
         console.error('Dashboard fetch failed:', error);
-        } finally {
+      } finally {
         setLoading(false);
-        }
+      }
     };
 
     fetchData();
-    }, [plantId]);
+  }, [plantId]);
 
   if (loading) return <div className="p-4">Loading Dashboard...</div>;
   if (!data) return <div className="p-4 text-red-600">Failed to load data.</div>;
-  const { plant_name } = data;
-  // Combine into chart-ready array
-  const chartData = data.histogram_data.dates.map((date, index) => ({
-    date,
-    yield_kwh: data.histogram_data.yield_kwh[index],
-    specific_energy: data.histogram_data.specific_energy[index],
-    peak_ac_power_kw: data.histogram_data.peak_ac_power_kw[index],
-    grid_connection_duration_h: data.histogram_data.grid_connection_duration_h[index],
-  }));
+
+  const { plant_name, summary, device_summary } = data;
+
+  const filterChartData = () => {
+    if (!data.histogram_data) return [];
+
+    const fullData = data.histogram_data.dates.map((date, index) => ({
+      date,
+      yield_kwh: data.histogram_data.yield_kwh[index],
+      specific_energy: data.histogram_data.specific_energy[index],
+      peak_ac_power_kw: data.histogram_data.peak_ac_power_kw[index],
+      grid_connection_duration_h: data.histogram_data.grid_connection_duration_h[index],
+    }));
+
+    if (timeRange === 'all') return fullData;
+
+    const days = parseInt(timeRange);
+    const cutoff = dayjs().subtract(days, 'day');
+
+    return fullData.filter((d) => dayjs(d.date).isAfter(cutoff));
+  };
+
+  const chartData = filterChartData();
+
   const hasChartData = chartData.length > 0 && chartData.some(item =>
     Object.values(item).some(value => value !== null && value !== 0)
   );
-  const { summary, device_summary } = data;
 
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-2">{plant_name}</h1>
-      <h2 className="text-2xl font-bold mb-4">Plant Performance Dashboard</h2>
+      <h2 className="text-2xl mb-4">Plant Performance Dashboard</h2>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -86,84 +102,98 @@ const PlantDashboard = ({ plantId }) => {
         <DashboardCard label="Grid Duration (h)" value={summary.total_grid_duration?.toFixed(2)} />
       </div>
 
-    {/* Devices Summary */}
-    <div className="mb-6">
-    <h3 className="text-xl font-semibold mb-4">Installed Devices</h3>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {Object.entries(device_summary).map(([type, count]) => (
-        <div
-            key={type}
-            className="flex items-center bg-white shadow rounded-2xl p-4 space-x-4"
-        >
-            <div className="bg-gray-100 p-2 rounded-full">
-            {deviceIcons[type] || <HelpCircle className="w-5 h-5 text-gray-400" />}
+      {/* Devices Summary */}
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold mb-4">Installed Devices</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {Object.entries(device_summary).map(([type, count]) => (
+            <div
+              key={type}
+              className="flex items-center bg-white shadow rounded-2xl p-4 space-x-4"
+            >
+              <div className="bg-gray-100 p-2 rounded-full">
+                {deviceIcons[type] || <HelpCircle className="w-5 h-5 text-gray-400" />}
+              </div>
+              <div>
+                <div className="text-sm text-gray-500 capitalize">{type}</div>
+                <div className="text-lg font-semibold">{count}</div>
+              </div>
             </div>
-            <div>
-            <div className="text-sm text-gray-500 capitalize">{type}</div>
-            <div className="text-lg font-semibold">{count}</div>
-            </div>
+          ))}
         </div>
-        ))}
-    </div>
+      </div>
 
-    </div>
+      {/* Time Range Selector */}
+      <div className="mb-6">
+        <label className="font-semibold mr-2">Time Range:</label>
+        <select
+          className="border rounded px-2 py-1"
+          value={timeRange}
+          onChange={(e) => setTimeRange(e.target.value)}
+        >
+          <option value="7d">Last Week</option>
+          <option value="30d">Last Month</option>
+          <option value="365d">Last Year</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {hasChartData ? (
-            <>
+          <>
             <ChartCard title="Yield Over Time">
-                <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="yield_kwh" fill="#38bdf8" />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="yield_kwh" fill="#38bdf8" />
                 </BarChart>
-                </ResponsiveContainer>
+              </ResponsiveContainer>
             </ChartCard>
 
             <ChartCard title="Specific Energy Over Time">
-                <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="specific_energy" stroke="#22c55e" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="specific_energy" stroke="#22c55e" strokeWidth={2} />
                 </LineChart>
-                </ResponsiveContainer>
+              </ResponsiveContainer>
             </ChartCard>
 
             <ChartCard title="Peak AC Power Over Time">
-                <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="peak_ac_power_kw" stroke="#facc15" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="peak_ac_power_kw" stroke="#facc15" strokeWidth={2} />
                 </LineChart>
-                </ResponsiveContainer>
+              </ResponsiveContainer>
             </ChartCard>
 
             <ChartCard title="Grid Connection Duration Over Time">
-                <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="grid_connection_duration_h" stroke="#3b82f6" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="grid_connection_duration_h" stroke="#3b82f6" strokeWidth={2} />
                 </LineChart>
-                </ResponsiveContainer>
+              </ResponsiveContainer>
             </ChartCard>
-            </>
+          </>
         ) : (
-            <NoDataFallback />
+          <NoDataFallback />
         )}
-        </div>
+      </div>
     </div>
   );
 };

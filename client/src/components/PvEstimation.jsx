@@ -9,21 +9,20 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { getPvEstimation } from '../services/api'; // adjust path
+import { getPvEstimation } from '../services/api';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+} from 'react-leaflet';
+import L from 'leaflet';
 
 const initialInputs = {
   location: {
     latitude: 45.8,
     longitude: 16.0,
     elevation: 115,
-  },
-  meteo_data: {
-    radiation_db: 'PVGIS-SARAH3',
-    meteo_db: 'ERA5',
-    year_min: 2005,
-    year_max: 2023,
-    use_horizon: true,
-    horizon_db: 'DEM-calculated',
   },
   mounting_system: {
     fixed: {
@@ -33,15 +32,9 @@ const initialInputs = {
     },
   },
   pv_module: {
-    technology: 'c-Si',
     peak_power: 10.0,
     system_loss: 12.0,
-  },
-  economic_data: {
-    system_cost: '',
-    interest: '',
-    lifetime: '',
-  },
+  }
 };
 
 export default function PvEstimation() {
@@ -50,7 +43,6 @@ export default function PvEstimation() {
   const [error, setError] = useState(null);
   const [output, setOutput] = useState(null);
 
-  // Handles nested changes with optional subfield (for 3-level deep)
   const handleChange = (section, field, value, subfield = null) => {
     setInputs((prev) => {
       if (subfield) {
@@ -94,6 +86,24 @@ export default function PvEstimation() {
 
   const monthlyData = output?.outputs?.monthly?.fixed || [];
 
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  });
+
+  function LocationMarker({ position, setPosition }) {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng;
+        setPosition(lat, lng);
+      },
+    });
+
+    return <Marker position={[position.latitude, position.longitude]} />;
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Photovoltaic Estimation</h1>
@@ -101,33 +111,37 @@ export default function PvEstimation() {
       <form onSubmit={handleSubmit} className="mb-8 space-y-6">
         {/* Location */}
         <fieldset className="border p-4 rounded">
-          <legend className="font-semibold mb-2">Location</legend>
-          <label className="block mb-2">
-            Latitude:
-            <input
-              type="number"
-              step="0.0001"
-              value={inputs.location.latitude}
-              onChange={(e) =>
-                handleChange('location', 'latitude', parseFloat(e.target.value))
-              }
-              className="ml-2 border rounded px-2 py-1"
-              required
-            />
-          </label>
-          <label className="block mb-2">
-            Longitude:
-            <input
-              type="number"
-              step="0.0001"
-              value={inputs.location.longitude}
-              onChange={(e) =>
-                handleChange('location', 'longitude', parseFloat(e.target.value))
-              }
-              className="ml-2 border rounded px-2 py-1"
-              required
-            />
-          </label>
+          <legend className="font-semibold mb-4">Location (Click map to set)</legend>
+
+          <div className="h-64 mb-4">
+            <MapContainer
+              center={[inputs.location.latitude, inputs.location.longitude]}
+              zoom={6}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; OpenStreetMap contributors"
+              />
+              <LocationMarker
+                position={inputs.location}
+                setPosition={(lat, lng) => {
+                  handleChange('location', 'latitude', lat);
+                  handleChange('location', 'longitude', lng);
+                }}
+              />
+            </MapContainer>
+          </div>
+
+          <input
+            type="hidden"
+            value={inputs.location.latitude}
+          />
+          <input
+            type="hidden"
+            value={inputs.location.longitude}
+          />
+
           <label className="block mb-2">
             Elevation (m):
             <input
@@ -139,93 +153,6 @@ export default function PvEstimation() {
               className="ml-2 border rounded px-2 py-1"
               required
             />
-          </label>
-        </fieldset>
-
-        {/* Meteo Data */}
-        <fieldset className="border p-4 rounded">
-          <legend className="font-semibold mb-2">Meteo Data</legend>
-
-          <label className="block mb-2">
-            Radiation Database:
-            <select
-              value={inputs.meteo_data.radiation_db}
-              onChange={(e) => handleChange('meteo_data', 'radiation_db', e.target.value)}
-              className="ml-2 border rounded px-2 py-1"
-              required
-            >
-              <option value="PVGIS-SARAH3">PVGIS-SARAH3</option>
-              <option value="Other">Other</option>
-            </select>
-          </label>
-
-          <label className="block mb-2">
-            Meteo Database:
-            <select
-              value={inputs.meteo_data.meteo_db}
-              onChange={(e) => handleChange('meteo_data', 'meteo_db', e.target.value)}
-              className="ml-2 border rounded px-2 py-1"
-              required
-            >
-              <option value="ERA5">ERA5</option>
-              <option value="Other">Other</option>
-            </select>
-          </label>
-
-          <label className="block mb-2">
-            Year Min:
-            <input
-              type="number"
-              value={inputs.meteo_data.year_min}
-              onChange={(e) =>
-                handleChange('meteo_data', 'year_min', parseInt(e.target.value))
-              }
-              className="ml-2 border rounded px-2 py-1"
-              min="1990"
-              max={inputs.meteo_data.year_max}
-              required
-            />
-          </label>
-
-          <label className="block mb-2">
-            Year Max:
-            <input
-              type="number"
-              value={inputs.meteo_data.year_max}
-              onChange={(e) =>
-                handleChange('meteo_data', 'year_max', parseInt(e.target.value))
-              }
-              className="ml-2 border rounded px-2 py-1"
-              min={inputs.meteo_data.year_min}
-              max={new Date().getFullYear()}
-              required
-            />
-          </label>
-
-          <label className="block mb-2">
-            Use Horizon:
-            <input
-              type="checkbox"
-              checked={inputs.meteo_data.use_horizon}
-              onChange={(e) =>
-                handleChange('meteo_data', 'use_horizon', e.target.checked)
-              }
-              className="ml-2"
-            />
-          </label>
-
-          <label className="block mb-2">
-            Horizon Database:
-            <select
-              value={inputs.meteo_data.horizon_db}
-              onChange={(e) => handleChange('meteo_data', 'horizon_db', e.target.value)}
-              className="ml-2 border rounded px-2 py-1"
-              disabled={!inputs.meteo_data.use_horizon}
-              required={inputs.meteo_data.use_horizon}
-            >
-              <option value="DEM-calculated">DEM-calculated</option>
-              <option value="Other">Other</option>
-            </select>
           </label>
         </fieldset>
 
@@ -285,19 +212,6 @@ export default function PvEstimation() {
           <legend className="font-semibold mb-2">PV Module</legend>
 
           <label className="block mb-2">
-            Technology:
-            <select
-              value={inputs.pv_module.technology}
-              onChange={(e) => handleChange('pv_module', 'technology', e.target.value)}
-              className="ml-2 border rounded px-2 py-1"
-              required
-            >
-              <option value="c-Si">c-Si</option>
-              <option value="Other">Other</option>
-            </select>
-          </label>
-
-          <label className="block mb-2">
             Peak Power (kW):
             <input
               type="number"
@@ -329,49 +243,6 @@ export default function PvEstimation() {
           </label>
         </fieldset>
 
-        {/* Economic Data */}
-        <fieldset className="border p-4 rounded">
-          <legend className="font-semibold mb-2">Economic Data (Optional)</legend>
-
-          <label className="block mb-2">
-            System Cost:
-            <input
-              type="number"
-              step="0.01"
-              value={inputs.economic_data.system_cost}
-              onChange={(e) =>
-                handleChange('economic_data', 'system_cost', e.target.value)
-              }
-              className="ml-2 border rounded px-2 py-1"
-            />
-          </label>
-
-          <label className="block mb-2">
-            Interest Rate (%):
-            <input
-              type="number"
-              step="0.01"
-              value={inputs.economic_data.interest}
-              onChange={(e) =>
-                handleChange('economic_data', 'interest', e.target.value)
-              }
-              className="ml-2 border rounded px-2 py-1"
-            />
-          </label>
-
-          <label className="block mb-2">
-            Lifetime (years):
-            <input
-              type="number"
-              value={inputs.economic_data.lifetime}
-              onChange={(e) =>
-                handleChange('economic_data', 'lifetime', e.target.value)
-              }
-              className="ml-2 border rounded px-2 py-1"
-            />
-          </label>
-        </fieldset>
-
         <button
           type="submit"
           className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
@@ -387,88 +258,79 @@ export default function PvEstimation() {
         <>
           <h2 className="text-xl font-semibold mb-4">Results</h2>
 
-          {/* Monthly Energy Chart */}
           <div className="mb-8">
-            <h3 className="font-semibold mb-2">Monthly Energy Production (kWh)</h3>
+            <h3 className="font-semibold mb-2">Monthly Energy Production</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart
-                data={monthlyData.map((m, idx) => ({ month: idx + 1, E_m: m.E_m }))}
+                data={monthlyData.map((m, idx) => ({
+                  month: idx + 1,
+                  energy: m.E_m
+                }))}
                 margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="month"
-                  label={{ value: 'Month', position: 'insideBottomRight', offset: -5 }}
-                />
-                <YAxis label={{ value: 'kWh', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
+                <XAxis dataKey="month" label={{ value: 'Month', position: 'insideBottomRight', offset: -5 }} />
+                <YAxis label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip formatter={(value) => [`${value} kWh`, 'Energy']} />
                 <Legend />
-                <Line type="monotone" dataKey="E_m" stroke="#8884d8" name="Monthly Energy" />
+                <Line type="monotone" dataKey="energy" name="Energy (kWh)" stroke="#8884d8" />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Monthly Irradiation Chart */}
           <div className="mb-8">
-            <h3 className="font-semibold mb-2">Monthly Irradiation (kWh/m²)</h3>
+            <h3 className="font-semibold mb-2">Monthly Solar Irradiation</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart
-                data={monthlyData.map((m, idx) => ({ month: idx + 1, H_i_m: m['H(i)_m'] }))}
-                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                data={monthlyData.map((m, idx) => ({
+                  month: idx + 1,
+                  irradiation: m["H(i)_m"]
+                }))}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="month"
-                  label={{ value: 'Month', position: 'insideBottomRight', offset: -5 }}
-                />
-                <YAxis label={{ value: 'kWh/m²', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
+                <XAxis dataKey="month" label={{ value: 'Month', position: 'insideBottomRight', offset: -5 }} />
+                <YAxis label={{ value: 'Irradiation (kWh/m²)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip formatter={(value) => [`${value} kWh/m²`, 'Irradiation']} />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="H_i_m"
-                  stroke="#82ca9d"
-                  name="Monthly Irradiation"
-                />
+                <Line type="monotone" dataKey="irradiation" name="Irradiation (kWh/m²)" stroke="#82ca9d" />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Annual Energy (kWh)</h4>
-              <p>{output.outputs.annual?.E_y?.toFixed(2) || '-'}</p>
+              <p>{output.outputs.totals?.fixed?.E_y?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Annual Irradiation (kWh/m²)</h4>
-              <p>{output.outputs.annual?.['H(i)_y']?.toFixed(2) || '-'}</p>
+              <p>{output.outputs.totals?.fixed?.["H(i)_y"]?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Total Losses (%)</h4>
-              <p>{output.outputs.annual?.l_total?.toFixed(2) || '-'}</p>
+              <p>{output.outputs.totals?.fixed?.l_total?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Std Dev</h4>
-              <p>{output.outputs.annual?.SD_y?.toFixed(3) || '-'}</p>
+              <p>{output.outputs.totals?.fixed?.SD_y?.toFixed(3) || '-'}</p>
             </div>
           </div>
 
-          {/* Loss breakdown */}
           <div className="mt-6 grid grid-cols-3 gap-4">
             <div className="bg-gray-50 p-4 rounded border">
               <h5 className="font-semibold">AOI Loss (%)</h5>
-              <p>{output.outputs.annual?.l_aoi?.toFixed(2) || '-'}</p>
+              <p>{output.outputs.totals?.fixed?.l_aoi?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded border">
               <h5 className="font-semibold">Spectral Loss (%)</h5>
-              <p>{output.outputs.annual?.l_spec?.toFixed(2) || '-'}</p>
+              <p>{parseFloat(output.outputs.totals?.fixed?.l_spec)?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded border">
               <h5 className="font-semibold">Temperature Loss (%)</h5>
-              <p>{output.outputs.annual?.l_tg?.toFixed(2) || '-'}</p>
+              <p>{output.outputs.totals?.fixed?.l_tg?.toFixed(2) || '-'}</p>
             </div>
           </div>
+
         </>
       )}
     </div>

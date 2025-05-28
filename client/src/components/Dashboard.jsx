@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Dashboard = () => {
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-4xl font-bold text-green-900 mb-6">Dashboard</h1>
+      <h1 className="text-4xl font-bold text-900 mb-6">Dashboard</h1>
       {/* Configure plants Section */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
         <h2 className="text-2xl font-semibold text-gray-700">Configure plants data ingestion</h2>
@@ -55,11 +55,17 @@ const Dashboard = () => {
 
       {/* Solar Yield Button */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Today's Solar Yield</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">View reports for all plants</h2>
         <div className="mt-4">
-          <button className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
-            View Today's Yield
-          </button>
+           <p className="text-gray-600 mb-4">
+            View or download reports for all installed plants.
+          </p>
+          <Link
+            to="/aggregated_report"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
+          >
+            View reports
+          </Link>
         </div>
       </div>
 
