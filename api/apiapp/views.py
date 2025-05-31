@@ -588,7 +588,7 @@ class PlantGetData(APIView):
             plant_name = plant.plant_name
         except Plant.DoesNotExist:
             plant_name = "Unknown Plant"
-        data_qs = PlantData.objects.filter(plant_id=plant_id).order_by('read_date')
+        data_qs = PlantData.objects.filter(plant_id=plant_id, is_valid=True).order_by('read_date')
 
         # Prepare data for charting
         histogram_data = {
@@ -677,7 +677,7 @@ class AggregatedPlantDataView(APIView):
         user = request.user
 
         # Only consider data for plants belonging to the current user
-        plant_data = PlantData.objects.filter(plant__user=user)
+        plant_data = PlantData.objects.filter(plant__user=user, is_valid=True)
 
         def aggregate_by(time_trunc):
             truncated = time_trunc('read_date')

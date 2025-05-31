@@ -73,6 +73,7 @@ class PlantData(models.Model):
     grid_connection_duration_h = models.FloatField()
     read_date = models.DateField(default=timezone.now)
     load_date = models.DateField(default=timezone.now)
+    is_valid = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.plant_id} - {self.plant_name} - {self.device_name}"
@@ -129,3 +130,25 @@ class AlarmPlant(models.Model):
 
     def __str__(self):
         return f"Alarm for {self.plant.plant_name} - {self.metric_type}"
+    
+
+class AlertLog(models.Model):
+    STATUS_CHOICES = [
+        ('triggered', 'Threshold Triggered'),
+        ('ok', 'Within Threshold'),
+    ]
+
+    plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name='alert_logs')
+    plant_data = models.ForeignKey(PlantData, on_delete=models.CASCADE, related_name='alert_logs')
+    read_date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    metric_type = models.CharField(max_length=50)
+    threshold_value = models.FloatField()
+    actual_value = models.FloatField()
+    triggered_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('plant', 'read_date', 'metric_type')
+
+    def __str__(self):
+        return f"{self.status.upper()} | {self.plant.plant_name} | {self.metric_type} on {self.read_date}"

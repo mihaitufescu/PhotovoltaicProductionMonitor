@@ -119,7 +119,7 @@ const PlantIngestion = () => {
         <ul className="text-sm list-disc pl-6 mb-4">
         <li>
             <strong>Endpoint:</strong>{' '}
-            <code>POST http://localhost:8000/api/plants/custom_ingestion/</code>
+            <code>POST http://localhost:8000/api/plants/custom_ingest/</code>
         </li>
         <li>
             <strong>Header:</strong>{' '}
@@ -134,14 +134,16 @@ const PlantIngestion = () => {
         </ul>
         <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
             {`{
-            "total_string_capacity_kwp": 120.5,
-            "yield_kwh": 360,
-            "total_yield_kwh": 8500,
-            "specific_energy_kwh_per_kwp": 4.2,
-            "peak_ac_power_kw": 78.3,
-            "grid_connection_duration_h": 23.5,
-            "read_date": "2025-05-23"
-        }`}
+            "data" : {
+              "total_string_capacity_kwp": 120.5,
+              "yield_kwh": 360,
+              "total_yield_kwh": 8500,
+              "specific_energy_kwh_per_kwp": 4.2,
+              "peak_ac_power_kw": 78.3,
+              "grid_connection_duration_h": 23.5,
+              "read_date": "2025-05-23"
+            }
+      }`}
         </pre>
         <p className="text-xs mt-2 italic text-gray-500">
         Replace the values with your actual data. The API key is unique per plant and must be authorized on the server.

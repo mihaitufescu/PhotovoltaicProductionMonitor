@@ -25,8 +25,9 @@ def csv_db_write(csv_path:str):
         peak_ac_power_kw,
         grid_connection_duration_h,
         read_date,
-        load_date
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        load_date,
+        is_valid
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     today = date.today()
@@ -36,10 +37,15 @@ def csv_db_write(csv_path:str):
     with open(csv_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         data = list(reader)
-    print(f"csv_db_write got data: {repr(data)}")  # show exactly what data is
-    # Then proceed with inserting `data` as before
+    print(f"csv_db_write got data: {repr(data)}")
     entry = data[0]
-    read_date = entry.get("read_date")
+    read_date = entry.get("read_date") if entry.get("read_date") is not None else today
+
+    cur.execute("""
+        UPDATE apiapp_plantdata
+        SET is_valid = FALSE
+        WHERE plant_id = %s AND read_date = %s
+    """, (entry.get("plant_id"), entry.get("read_date")))
 
     cur.execute(insert_query, (
         entry.get("plant_id"),
@@ -51,10 +57,11 @@ def csv_db_write(csv_path:str):
         entry.get("grid_connection_duration_h"),
         read_date,
         today,  # load_date
+        True
     ))
 
     conn.commit()
     cur.close()
     conn.close()
 
-    print(f"✅ Wrote 1 record to DB for plant_id={entry.get('plant_id')}")
+    print(f"Wrote 1 record to DB for plant_id={entry.get('plant_id')}")
