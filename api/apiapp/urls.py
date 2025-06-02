@@ -30,4 +30,7 @@ urlpatterns = [
     path('plants/<int:plant_id>/get_data/', views.PlantGetData.as_view(), name='plant-get-data'),
     path('get-pv-estimation/', views.PlantPvEstimation.as_view(), name='plant-pv-estimation'),
     path('aggregated-report/', views.AggregatedPlantDataView.as_view(), name='aggregated-report'),
+    path('get-notifications-user/', views.GetNotificationsPerUser.as_view(), name='get-notifications-user'),
+    path('mark-alert/<int:alert_id>/', views.MarkAlertAsViewed.as_view(), name='mark-alert-as-viewed'),
+    path('update_alarm/<int:plant_id>/', views.UpdateAlarmSettings.as_view(), name='update-alarm-settings'),
 ]

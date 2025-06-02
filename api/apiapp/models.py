@@ -136,6 +136,7 @@ class AlertLog(models.Model):
     STATUS_CHOICES = [
         ('triggered', 'Threshold Triggered'),
         ('ok', 'Within Threshold'),
+        ('n/a', 'Data of the last 7 days not available'),
     ]
 
     plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name='alert_logs')
@@ -143,12 +144,12 @@ class AlertLog(models.Model):
     read_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     metric_type = models.CharField(max_length=50)
+    avg_value = models.FloatField()
     threshold_value = models.FloatField()
     actual_value = models.FloatField()
     triggered_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        unique_together = ('plant', 'read_date', 'metric_type')
+    is_valid = models.BooleanField(default=True)
+    unread = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.status.upper()} | {self.plant.plant_name} | {self.metric_type} on {self.read_date}"

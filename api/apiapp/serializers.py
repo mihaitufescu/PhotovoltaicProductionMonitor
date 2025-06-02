@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, Plant, AlarmPlant, Device, ApiKeyIngestionSettings, AwsIngestionSettings
+from .models import User, Plant, AlarmPlant, Device, ApiKeyIngestionSettings, AwsIngestionSettings, AlertLog
 import hashlib
 import secrets
 from django.contrib.auth.hashers import make_password
@@ -134,3 +134,22 @@ class PlantOverviewSerializer(serializers.Serializer):
     plant = GetPlantSerializer()
     devices = GetDeviceSerializer(many=True)
     alarm_settings = GetAlarmSerializer(allow_null=True)
+
+class AlertLogSerializer(serializers.ModelSerializer):
+    plant_name = serializers.CharField(source='plant.plant_name', read_only=True)
+
+    class Meta:
+        model = AlertLog
+        fields = [
+            'id',
+            'plant_name',
+            'read_date',
+            'status',
+            'metric_type',
+            'avg_value',
+            'threshold_value',
+            'actual_value',
+            'triggered_at',
+            'is_valid',
+            'unread',
+        ]

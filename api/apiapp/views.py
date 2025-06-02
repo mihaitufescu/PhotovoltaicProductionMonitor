@@ -9,8 +9,8 @@ from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken
-from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device, PlantData
-from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer,GetPlantSerializer, GetDeviceSerializer, DeviceCreateUpdateSerializer
+from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device, PlantData, AlertLog
+from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer,GetPlantSerializer, GetDeviceSerializer, DeviceCreateUpdateSerializer, AlertLogSerializer
 from django.core.mail import send_mail
 from .utils import generate_confirmation_link
 from django.utils.http import urlsafe_base64_decode
@@ -711,3 +711,66 @@ class AggregatedPlantDataView(APIView):
 
         return Response(response_data)
     
+class GetNotificationsPerUser(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        alerts = AlertLog.objects.filter(
+            plant__user=user,
+            is_valid=True,
+            unread=True
+        ).order_by('-read_date', '-id')
+
+        if not alerts.exists():
+            return Response({
+                "alerts": [],
+                "message": "No unread alerts at the moment."
+            })
+
+        serializer = AlertLogSerializer(alerts, many=True)
+        return Response({
+            "alerts": serializer.data
+        })
+    
+class MarkAlertAsViewed(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, alert_id):
+        try:
+            alert = AlertLog.objects.get(id=alert_id, is_valid=True)
+            alert.unread = False
+            alert.save()
+            return Response({"detail": "Alert marked as read."}, status=status.HTTP_200_OK)
+        except AlertLog.DoesNotExist:
+            return Response({"detail": "Alert not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+class UpdateAlarmSettings(APIView):
+    def patch(self, request, plant_id):
+        alarm = AlarmPlant.objects.filter(plant_id=plant_id).first()
+        if not alarm:
+            return Response({"error": "Alarm settings not found for this plant"}, status=status.HTTP_404_NOT_FOUND)
+
+        metric_type = request.data.get("metric_type")
+        threshold_value = request.data.get("threshold_value")
+
+        if metric_type:
+            if metric_type not in ["yield", "power", "specific_energy"]:
+                return Response({"error": "Invalid metric_type"}, status=status.HTTP_400_BAD_REQUEST)
+            alarm.metric_type = metric_type
+
+        if threshold_value is not None:
+            try:
+                alarm.threshold_value = float(threshold_value)
+            except (TypeError, ValueError):
+                return Response({"error": "Invalid threshold_value"}, status=status.HTTP_400_BAD_REQUEST)
+
+        alarm.save()
+
+        return Response({
+            "message": "Alarm settings updated",
+            "plant_id": alarm.plant_id,
+            "metric_type": alarm.metric_type,
+            "threshold_value": alarm.threshold_value
+        }, status=status.HTTP_200_OK)

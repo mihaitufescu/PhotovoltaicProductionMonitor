@@ -177,4 +177,40 @@ export const getPlantAggregates = async () => {
   }
 };
 
+export const getUserNotifications = async () => {
+  try {
+    const response = await API.get('/api/get-notifications-user/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    throw error;
+  }
+};
+
+export const markAlertAsViewed = async (id) => {
+  const res = await fetch(`/api/mark-alert/${id}/`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to mark alert as read');
+  return res.json();
+};
+
+export const updateAlarmSettings = async (plantId, data) => {
+  const response = await fetch(`/api/update_alarm/${plantId}/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw { response: { data: errorData } };
+  }
+
+  return response.json();
+};
+
+
 export default API;

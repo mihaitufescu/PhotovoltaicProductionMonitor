@@ -71,32 +71,17 @@ const Dashboard = () => {
 
       {/* Set Threshold Button */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Set Threshold</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Configure alarms thresholds</h2>
         <div className="mt-4">
-          <button className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
-            Set Yield Threshold
-          </button>
-        </div>
-      </div>
-
-      {/* User Management Section */}
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">User Management</h2>
-        <div className="mt-4">
+           <p className="text-gray-600 mb-4">
+            Configure or modify alarms thresholds.
+          </p>
           <Link
-            to="/user-settings"
-            className="text-green-600 hover:text-green-800 font-medium"
+            to="/alarm_settings"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            User Settings (Coming Soon)
+            View reports
           </Link>
-        </div>
-      </div>
-
-      {/* Additional Information Section */}
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Additional Info</h2>
-        <div className="mt-4">
-          <p className="text-lg">Placeholder for more information about the system.</p>
         </div>
       </div>
     </div>

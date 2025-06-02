@@ -3,6 +3,8 @@ from dagster_app.custom_jobs.scrape_inverter import run_fusionsolar_scraper
 from dagster_app.custom_jobs.convert_xlxs_to_csv import convert_xlxs_to_csv
 from dagster_app.custom_jobs.csv_db_write import csv_db_write
 from dagster_app.custom_jobs.file_handling import save_csv_string_to_file, convert_json_to_csv_file
+from dagster_app.custom_jobs.delete_old_alerts import delete_old_alert_logs
+from dagster_app.custom_jobs.insert_alerts import insert_new_alert_logs
 
 @asset
 def download_fusionsolar_report():
@@ -39,3 +41,17 @@ def ingest_file_asset(context) -> str:
 def write_to_db_asset(ingest_file_asset: str) -> bool:
     csv_db_write(ingest_file_asset)
     return True
+
+
+@asset
+def delete_old_alerts() -> bool:
+    delete_old_alert_logs()
+    return True
+
+@asset
+def insert_alerts(delete_old_alerts: bool) -> bool:
+    if delete_old_alerts:
+        insert_new_alert_logs()
+        return True
+    return False
+

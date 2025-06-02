@@ -12,6 +12,8 @@ import PlantIngestion from "./components/PlantIngestion";
 import PlantDashboardWrapper from './components/PlantDashboardWrapper';
 import PvEstimation from './components/PvEstimation';
 import PlantAggregateReport from './components/PlantAggregateReport';
+import Notifications from './components/Notifications';
+import AlarmSettings from './components/AlarmSettings';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from './redux/slices/authSlice';
@@ -39,6 +41,8 @@ function App() {
         <Route path="/plants-ingestion" element={<PlantIngestion />} />
         <Route path="/plants-dashboard/:plantId" element={<PlantDashboardWrapper />} />
         <Route path="/aggregated_report" element={<PlantAggregateReport />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/alarm_settings" element={<AlarmSettings />} />
       </Routes>
     </Router>
   );
