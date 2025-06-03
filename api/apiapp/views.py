@@ -26,6 +26,7 @@ import yaml
 from django.db.models import Q
 from django.db.models import Avg, Sum, Max, Count
 from django.db.models.functions import TruncWeek, TruncMonth, TruncYear
+from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,7 @@ class UserRegisterView(generics.CreateAPIView):
         )
 
 class ConfirmEmailView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
     def get(self, request, uidb64, token):
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
@@ -138,14 +140,10 @@ class ConfirmEmailView(generics.CreateAPIView):
 class UpdateUserView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserUpdateSerializer
-    def put(self, request, user_id):
-        print(f"User id is {user_id}")
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({"message": "User not found.", 'is_error': True}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
+    def put(self, request):
+        user = request.user
+        serializer = self.get_serializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -160,6 +158,8 @@ class GetJWTUserView(generics.CreateAPIView):
 
     def get(self, request):
         user = request.user
+        if not user:
+            return Response({'detail': 'User not found.'}, status=401)
         return Response({
             "id": user.id,
             "email": user.email,
@@ -170,15 +170,11 @@ class GetJWTUserView(generics.CreateAPIView):
             "is_email_confirmed": user.is_email_confirmed
         })
     
-class GetUserByIdView(generics.RetrieveAPIView):
+class GetCurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserUpdateSerializer
-    lookup_url_kwarg = 'user_id'
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
+    def get(self, request):
+        serializer = UserUpdateSerializer(request.user)
         return Response({
             "message": "User fetched successfully.",
             "data": serializer.data

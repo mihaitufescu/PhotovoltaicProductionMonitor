@@ -14,17 +14,23 @@ import PvEstimation from './components/PvEstimation';
 import PlantAggregateReport from './components/PlantAggregateReport';
 import Notifications from './components/Notifications';
 import AlarmSettings from './components/AlarmSettings';
+import UserSettings from './components/UserSettings';
+import ConfirmEmailPage from './components/ConfirmEmailPage';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from './redux/slices/authSlice';
+import { useSelector } from 'react-redux';
 
 
 function App() {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(fetchCurrentUser());
-  }, [dispatch]);
+    if (user === null) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch, user]);
 
   return (
     <Router>
@@ -43,6 +49,8 @@ function App() {
         <Route path="/aggregated_report" element={<PlantAggregateReport />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/alarm_settings" element={<AlarmSettings />} />
+        <Route path="/user_settings" element={<UserSettings />} />
+        <Route path="/confirm-email/:uidb64/:token" element={<ConfirmEmailPage />} />
       </Routes>
     </Router>
   );

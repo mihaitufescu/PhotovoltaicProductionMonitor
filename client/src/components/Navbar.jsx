@@ -91,7 +91,7 @@ const Navbar = () => {
                 )}
               </Link>
               <Link
-                to="/settings"
+                to="/user_settings"
                 className="flex items-center gap-1 text-white font-semibold bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md transition-colors duration-300"
               >
                 <Settings size={18} />

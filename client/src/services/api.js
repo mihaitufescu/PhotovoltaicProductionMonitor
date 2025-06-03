@@ -5,28 +5,34 @@ const API = axios.create({
   withCredentials: true,
 });
 
+const MAX_RETRY = 5;
+
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
-      try {
-        await axios.post('/api/refresh-cookie/', {}, { withCredentials: true });
-        return API(originalRequest); // retry original request
-      } catch (refreshError) {
-        console.error("Refresh token expired or invalid");
-        // Redirect to login if refresh fails
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
+    if (error.response?.status === 401) {
+      originalRequest._retryCount = originalRequest._retryCount || 0;
+
+      if (originalRequest._retryCount < MAX_RETRY) {
+        originalRequest._retryCount += 1;
+
+        try {
+          await axios.post('/api/refresh-cookie/', {}, { withCredentials: true });
+          return API(originalRequest); // retry once
+        } catch (refreshError) {
+          console.error("Refresh token expired or invalid");
+        }
       }
+
+    // Cleanup + redirect only once
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    // window.location.href = '/login';
     }
 
-    return Promise.reject(error);
+  return Promise.reject(error);
   }
 );
 
@@ -212,5 +218,34 @@ export const updateAlarmSettings = async (plantId, data) => {
   return response.json();
 };
 
+export const getCurrentUserInfo = async () => {
+  const response = await axios.get(`api/user/get/`);
+  return response.data;
+};
+
+export const updateCurrentUser = async (payload) => {
+  const response = await axios.put(`api/user/update/`, payload);
+  return response.data;
+};
+
+export const confirmEmail = async (uidb64, token) => {
+  try {
+    const response = await axios.get(
+      `/api/confirm-email/${uidb64}/${token}/`
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { detail: 'Something went wrong' };
+  }
+};
+
+export const deleteCurrentUser = async () => {
+  try {
+    const response = await axios.delete('/api/user/delete_current_user/');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { detail: 'Something went wrong' };
+  }
+};
 
 export default API;

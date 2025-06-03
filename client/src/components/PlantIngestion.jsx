@@ -68,7 +68,7 @@ const PlantIngestion = () => {
           <option value="">-- Select a plant --</option>
           {plants.map((plantObj) => (
             <option key={plantObj.plant.id} value={plantObj.plant.id}>
-              {plantObj.plant.plant_name} (ID: {plantObj.plant.id})
+              {plantObj.plant.plant_name}
             </option>
           ))}
         </select>
