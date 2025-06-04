@@ -12,7 +12,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken
 from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device, PlantData, AlertLog
 from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer,GetPlantSerializer, GetDeviceSerializer, DeviceCreateUpdateSerializer, AlertLogSerializer
 from django.core.mail import send_mail
-from .utils import generate_confirmation_link
+from .utils import generate_confirmation_link, generate_reset_token
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.hashers import check_password
@@ -27,6 +27,8 @@ from django.db.models import Q
 from django.db.models import Avg, Sum, Max, Count
 from django.db.models.functions import TruncWeek, TruncMonth, TruncYear
 from rest_framework.permissions import AllowAny
+from django.contrib.auth.hashers import make_password
+
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +104,7 @@ def hello_world(request):
     return JsonResponse({"message": "Hello, Django API is running!"})
 
 class UserRegisterView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
 
@@ -111,7 +114,7 @@ class UserRegisterView(generics.CreateAPIView):
         user.save()
 
         # Generate confirmation link
-        link = generate_confirmation_link(user, self.request)
+        link = generate_confirmation_link(user)
 
         # Send email
         send_mail(
@@ -132,7 +135,7 @@ class ConfirmEmailView(generics.CreateAPIView):
             return Response({'detail': 'Invalid link'}, status=400)
 
         if default_token_generator.check_token(user, token):
-            user.is_confirmed = True
+            user.is_email_confirmed = True
             user.save()
             return Response({'detail': 'Email confirmed! 🎉'})
         return Response({'detail': 'Invalid or expired token'}, status=400)
@@ -743,6 +746,7 @@ class MarkAlertAsViewed(APIView):
             return Response({"detail": "Alert not found."}, status=status.HTTP_404_NOT_FOUND)
         
 class UpdateAlarmSettings(APIView):
+    permission_classes = [IsAuthenticated]
     def patch(self, request, plant_id):
         alarm = AlarmPlant.objects.filter(plant_id=plant_id).first()
         if not alarm:
@@ -770,3 +774,94 @@ class UpdateAlarmSettings(APIView):
             "metric_type": alarm.metric_type,
             "threshold_value": alarm.threshold_value
         }, status=status.HTTP_200_OK)
+    
+class ForgotPasswordView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email=email)
+
+            if not user.is_email_confirmed:
+                return Response({'error': 'Encountered issues'}, status=status.HTTP_403_FORBIDDEN)
+            
+            reset_url = generate_reset_token(user)
+
+            send_mail(
+                subject="Reset Your Password",
+                message=f"Click the link to reset your password: {reset_url}",
+                from_email=None,
+                recipient_list=[user.email],
+            )
+
+            return Response({'message': 'Password reset link sent.'})
+        except User.DoesNotExist:
+            # For security, don’t reveal if email exists
+            return Response({'message': 'Encountered issues.'}, status=status.HTTP_403_FORBIDDEN)
+
+class ResetPasswordView(APIView):
+    def post(self, request, uidb64, token):
+        new_password = request.data.get('new_password')
+
+        if not new_password:
+            return Response({'error': 'New password is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+            return Response({'error': 'Invalid link'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({'message': 'Password has been reset successfully.'})
+    
+class SystemAvailabilityView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        plants = Plant.objects.filter(user=user)
+
+        availability_data = []
+        total_ok = 0
+        total_valid = 0
+
+        for plant in plants:
+            alerts = AlertLog.objects.filter(plant=plant)
+
+            # Only count alerts with 'ok' or 'triggered' (exclude 'n/a')
+            valid_alerts = alerts.exclude(status='n/a')
+            ok_alerts = valid_alerts.filter(status='ok')
+            triggered_alerts = valid_alerts.filter(status='triggered')
+
+            total = valid_alerts.count()
+            ok = ok_alerts.count()
+            triggered = triggered_alerts.count()
+
+            availability_pct = (ok / total) * 100 if total > 0 else None
+
+            availability_data.append({
+                'plant_id': plant.id,
+                'plant_name': plant.plant_name,
+                'ok_count': ok,
+                'triggered_count': triggered,
+                'total_days': total,
+                'availability_percent': round(availability_pct, 2) if availability_pct is not None else 'No data'
+            })
+
+            total_ok += ok
+            total_valid += total
+
+        system_availability_pct = (total_ok / total_valid) * 100 if total_valid > 0 else None
+
+        return Response({
+            'plants': availability_data,
+            'system_availability_percent': round(system_availability_pct, 2) if system_availability_pct is not None else 'No data'
+        })

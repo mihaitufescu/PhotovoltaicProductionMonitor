@@ -248,4 +248,30 @@ export const deleteCurrentUser = async () => {
   }
 };
 
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await API.post('/api/forgot-password/', { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Something went wrong.' };
+  }
+};
+
+export const resetPassword = async (uidb64, token, newPassword) => {
+  const response = await API.post(`/api/reset-password/${uidb64}/${token}/`, {
+    new_password: newPassword,
+  });
+  return response.data;
+};
+
+export const fetchSystemAvailability = async () => {
+  try {
+    const response = await axios.get('/api/system-availability/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching system availability:', error);
+    throw error;
+  }
+};
+
 export default API;

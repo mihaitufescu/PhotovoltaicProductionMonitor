@@ -16,41 +16,77 @@ import Notifications from './components/Notifications';
 import AlarmSettings from './components/AlarmSettings';
 import UserSettings from './components/UserSettings';
 import ConfirmEmailPage from './components/ConfirmEmailPage';
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { fetchCurrentUser } from './redux/slices/authSlice';
-import { useSelector } from 'react-redux';
+import SystemAvailability from './components/SystemAvailability';
+import ResetPassword from './components/Auth/ResetPassword';
+import ProtectedRoute from "./ProtectedRoute";
 
 
 function App() {
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    if (user === null) {
-      dispatch(fetchCurrentUser());
-    }
-  }, [dispatch, user]);
 
   return (
     <Router>
       <Navbar />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/hello" element={<HelloPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/estimate-pv" element={<PvEstimation />} />
-        <Route path="/configure-plants" element={<ConfigurePlants />} />
-        <Route path="/plants-overview" element={<PlantOverview />} />
-        <Route path="/plants-ingestion" element={<PlantIngestion />} />
-        <Route path="/plants-dashboard/:plantId" element={<PlantDashboardWrapper />} />
-        <Route path="/aggregated_report" element={<PlantAggregateReport />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/alarm_settings" element={<AlarmSettings />} />
-        <Route path="/user_settings" element={<UserSettings />} />
         <Route path="/confirm-email/:uidb64/:token" element={<ConfirmEmailPage />} />
+        <Route path="/estimate-pv" element={<PvEstimation />} />
+        <Route path="/reset-password/:uidb64/:token" element={<ResetPassword />} />
+
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/configure-plants" element={
+          <ProtectedRoute>
+            <ConfigurePlants />
+          </ProtectedRoute>
+        } />
+        <Route path="/plants-overview" element={
+          <ProtectedRoute>
+            <PlantOverview />
+          </ProtectedRoute>
+        } />
+        <Route path="/plants-ingestion" element={
+          <ProtectedRoute>
+            <PlantIngestion />
+          </ProtectedRoute>
+        } />
+        <Route path="/plants-dashboard/:plantId" element={
+          <ProtectedRoute>
+            <PlantDashboardWrapper />
+          </ProtectedRoute>
+        } />
+        <Route path="/aggregated_report" element={
+          <ProtectedRoute>
+            <PlantAggregateReport />
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        } />
+        <Route path="/alarm_settings" element={
+          <ProtectedRoute>
+            <AlarmSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/user_settings" element={
+          <ProtectedRoute>
+            <UserSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/system_availability" element={
+          <ProtectedRoute>
+            <SystemAvailability />
+          </ProtectedRoute>
+        } />
       </Routes>
     </Router>
   );

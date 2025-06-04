@@ -33,4 +33,8 @@ urlpatterns = [
     path('get-notifications-user/', views.GetNotificationsPerUser.as_view(), name='get-notifications-user'),
     path('mark-alert/<int:alert_id>/', views.MarkAlertAsViewed.as_view(), name='mark-alert-as-viewed'),
     path('update_alarm/<int:plant_id>/', views.UpdateAlarmSettings.as_view(), name='update-alarm-settings'),
+    path('forgot-password/', views.ForgotPasswordView.as_view(), name='forgot-password'),
+    path('reset-password/<uidb64>/<token>/', views.ResetPasswordView.as_view(), name='reset-password'),
+    path('system-availability/', views.SystemAvailabilityView.as_view(), name='system-availabilty')
+
 ]

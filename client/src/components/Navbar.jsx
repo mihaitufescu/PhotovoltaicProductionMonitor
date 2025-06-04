@@ -49,18 +49,18 @@ const Navbar = () => {
             <span className="text-white text-xl font-bold tracking-wide leading-none">
               PhotovoltaicMonitor
             </span>
-            <Link to="/" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
-              Home
-            </Link>
-            {user && (
-              <>
-              <Link to="/dashboard" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
-                Dashboard
+            <>
+              <Link to="/" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
+                Home
               </Link>
               <Link to="/estimate-pv" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
                 Production estimator
               </Link>
-              </>
+            </>
+            {user && (
+              <Link to="/dashboard" className="text-white text-lg font-semibold hover:text-green-200 transition-colors duration-300">
+                Dashboard
+              </Link>
             )}
           </div>
 

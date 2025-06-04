@@ -126,7 +126,7 @@ def insert_new_alert_logs():
                     WHEN ap.metric_type = 'specific_energy' AND ld.specific_energy_kwh_per_kwp < ra.avg_value * (ap.threshold_value / 100.0) THEN 'triggered'
                     ELSE 'ok'
               END
-        );
+        )
     """)
 
     print(f"Inserted {cur.rowcount} rows")

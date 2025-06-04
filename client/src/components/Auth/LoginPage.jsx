@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/api";
 import { useDispatch } from 'react-redux';
 import { login } from '../../redux/slices/authSlice';
-
+import ForgotPasswordModal from "../Modals/ForgotPasswordModal";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [showForgotModal, setShowForgotModal] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -95,23 +96,24 @@ const LoginPage = () => {
 
         <div className="flex justify-between items-center">
           <button
+            type="button"
+            onClick={() => setShowForgotModal(true)}
+            className="text-sm text-green-600 hover:text-green-800 font-medium"
+          >
+            Forgot Password?
+          </button>
+
+          <button
             type="submit"
-            className="bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition font-semibold"
+            className="w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition"
           >
             Login
           </button>
-          <a
-            href="#"
-            className="text-sm text-green-600 hover:text-green-800 font-medium"
-            onClick={(e) => {
-              e.preventDefault();
-              alert("Forgot Password flow coming soon!");
-            }}
-          >
-            Forgot Password?
-          </a>
         </div>
       </form>
+      {showForgotModal && (
+        <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />
+      )}
     </div>
   );
 };

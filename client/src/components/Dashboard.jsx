@@ -80,7 +80,20 @@ const Dashboard = () => {
             to="/alarm_settings"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            View reports
+            Configure
+          </Link>
+        </div>
+      </div>
+
+      {/* Set System Availability Button */}
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-2xl font-semibold text-gray-700">View System Availability</h2>
+        <div className="mt-4">
+          <Link
+            to="/system_availability"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
+          >
+            View
           </Link>
         </div>
       </div>
