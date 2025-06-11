@@ -15,7 +15,7 @@ const Section = ({ title, data }) => (
       <table className="w-full table-auto border border-gray-300">
         <thead className="bg-gray-100">
           <tr>
-            <th className="px-4 py-2 border">Period</th>
+            <th className="px-4 py-2 border">Start period</th>
             <th className="px-4 py-2 border">Total Yield (kWh)</th>
             <th className="px-4 py-2 border">Avg. Specific Energy (kWh/kWp)</th>
             <th className="px-4 py-2 border">Peak AC Power (kW)</th>

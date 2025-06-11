@@ -16,7 +16,7 @@ def delete_old_alert_logs():
 
     cur.execute("""
         DELETE FROM apiapp_alertlog
-        WHERE read_date < CURRENT_DATE - INTERVAL '7 days'
+        WHERE read_date < CURRENT_DATE - INTERVAL '365 days'
         """)
 
     deleted_rows = cur.rowcount 

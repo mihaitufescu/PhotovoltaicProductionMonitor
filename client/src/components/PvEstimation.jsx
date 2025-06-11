@@ -84,7 +84,9 @@ export default function PvEstimation() {
     }
   };
 
-  const monthlyData = output?.outputs?.monthly?.fixed || [];
+const monthlyData = output?.pvgisData?.outputs?.monthly?.fixed || [];
+const totalData = output?.pvgisData?.outputs?.totals?.fixed || {};
+const marketPrice = output?.marketPrice || {};
 
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
@@ -300,34 +302,39 @@ export default function PvEstimation() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Annual Energy (kWh)</h4>
-              <p>{output.outputs.totals?.fixed?.E_y?.toFixed(2) || '-'}</p>
+              <p>{totalData.E_y?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Annual Irradiation (kWh/m²)</h4>
-              <p>{output.outputs.totals?.fixed?.["H(i)_y"]?.toFixed(2) || '-'}</p>
+              <p>{totalData["H(i)_y"]?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Total Losses (%)</h4>
-              <p>{output.outputs.totals?.fixed?.l_total?.toFixed(2) || '-'}</p>
+              <p>{totalData.l_total?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
               <h4 className="font-semibold">Std Dev</h4>
-              <p>{output.outputs.totals?.fixed?.SD_y?.toFixed(3) || '-'}</p>
+              <p>{totalData.SD_y?.toFixed(3) || '-'}</p>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-3 gap-4">
+          <div className="mt-6 grid grid-cols-4 gap-4">
             <div className="bg-gray-50 p-4 rounded border">
               <h5 className="font-semibold">AOI Loss (%)</h5>
-              <p>{output.outputs.totals?.fixed?.l_aoi?.toFixed(2) || '-'}</p>
+              <p>{totalData.l_aoi?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded border">
               <h5 className="font-semibold">Spectral Loss (%)</h5>
-              <p>{parseFloat(output.outputs.totals?.fixed?.l_spec)?.toFixed(2) || '-'}</p>
+              <p>{parseFloat(totalData.l_spec)?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded border">
               <h5 className="font-semibold">Temperature Loss (%)</h5>
-              <p>{output.outputs.totals?.fixed?.l_tg?.toFixed(2) || '-'}</p>
+              <p>{totalData.l_tg?.toFixed(2) || '-'}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded border">
+              <h5 className="font-semibold">PZU price for {marketPrice.month_year}</h5>
+              <p>{marketPrice.price_lei_per_MWh.toFixed(2)} RON/mWh</p>
+              <p>Estimated: {((marketPrice.price_lei_per_MWh / 1000) * (totalData.E_y ?? 0)).toFixed(2)} RON</p>
             </div>
           </div>
 

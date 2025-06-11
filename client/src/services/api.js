@@ -166,7 +166,10 @@ export const getPvEstimation = async (payload) => {
     };
     console.log(flattenedPayload)
     const response = await API.post('/api/get-pv-estimation/', flattenedPayload);
-    return response.data;
+    return {
+      pvgisData: response.data.pvgis_data,
+      marketPrice: response.data.market_price
+    };
   } catch (error) {
     console.error('Error fetching PV estimation:', error);
     throw error;

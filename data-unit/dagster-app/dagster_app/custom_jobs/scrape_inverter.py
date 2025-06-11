@@ -31,9 +31,8 @@ def run_fusionsolar_scraper() -> str:
         "directory_upgrade": True
     })
 
-    # Automatically handles compatible ChromeDriver
     driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager(driver_version="135.0.7049.95").install()),
+        service=Service("/usr/local/bin/chromedriver"),
         options=chrome_options
     )
 

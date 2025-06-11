@@ -12,7 +12,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken
 from .models import User, Plant, AlarmPlant, ApiKeyIngestionSettings, Device, PlantData, AlertLog
 from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer, UserUpdateSerializer, PlantSerializer, PlantOverviewSerializer,GetPlantSerializer, GetDeviceSerializer, DeviceCreateUpdateSerializer, AlertLogSerializer
 from django.core.mail import send_mail
-from .utils import generate_confirmation_link, generate_reset_token
+from .utils import generate_confirmation_link, generate_reset_token, fetch_day_ahead_market_price
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.hashers import check_password
@@ -600,7 +600,7 @@ class PlantGetData(APIView):
 
         # Summary stats (optional for dashboard header)
         stats_summary = data_qs.aggregate(
-            total_yield_kwh=Sum("yield_kwh"),
+            total_yield_kwh=Sum("yield_kwh"), #posibil sa trebuiasca sa inlocuiesc cu total yield din invertor, de discutat cu profesorul
             avg_specific_energy=Avg("specific_energy_kwh_per_kwp"),
             max_peak_power=Max("peak_ac_power_kw"),
             total_grid_duration=Sum("grid_connection_duration_h"),
@@ -663,7 +663,16 @@ class PlantPvEstimation(APIView):
             }
             response = requests.get(pvgis_url, params=params)
             response.raise_for_status()
+
+            opcom_price = fetch_day_ahead_market_price()
+
             data = response.json()
+
+            return Response({
+                "pvgis_data": data,
+                "market_price": opcom_price,
+            })
+
 
             return Response(data)
         except Exception as e:
