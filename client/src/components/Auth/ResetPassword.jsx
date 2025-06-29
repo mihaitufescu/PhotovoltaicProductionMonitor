@@ -17,27 +17,27 @@ const ResetPassword = () => {
     setError('');
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Parolele nu se potrivesc.");
       return;
     }
 
     try {
       const res = await resetPassword(uidb64, token, newPassword);
-      setMessage(res.message || 'Password has been reset.');
+      setMessage(res.message || 'Parola a fost resetată.');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Something went wrong.');
+      setError(err?.response?.data?.error || 'Eroare server.');
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 border rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Reset Your Password</h2>
+      <h2 className="text-2xl font-bold mb-4">Resetează parola</h2>
       {message && <div className="text-green-600 mb-2">{message}</div>}
       {error && <div className="text-red-600 mb-2">{error}</div>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block mb-1">New Password</label>
+          <label className="block mb-1">Parolă nouă</label>
           <input
             type="password"
             className="w-full border px-3 py-2 rounded"
@@ -47,7 +47,7 @@ const ResetPassword = () => {
           />
         </div>
         <div className="mb-6">
-          <label className="block mb-1">Confirm Password</label>
+          <label className="block mb-1">Confirmă parolă</label>
           <input
             type="password"
             className="w-full border px-3 py-2 rounded"
@@ -60,7 +60,7 @@ const ResetPassword = () => {
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
         >
-          Reset Password
+          Resetează parola
         </button>
       </form>
     </div>

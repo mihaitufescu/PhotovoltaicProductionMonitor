@@ -58,12 +58,12 @@ const ConfigurePlants = () => {
 
       if (response.api_key) {
         setApiKey(response.api_key);
-        setMessage("Plant created successfully!");
+        setMessage("Parcul a fost creat!");
       } else {
-        setMessage("Failed to create plant.");
+        setMessage("Eroare salvare parc.");
       }
 
-      // Reset form
+
       setPlantName("");
       setThreshold("");
       setMetricType("yield");
@@ -71,26 +71,25 @@ const ConfigurePlants = () => {
       setAwsSettings({ bucket_name: "", region: "", access_key: "", secret_key: "" });
     } catch (err) {
       console.error(err);
-      setMessage("Failed to create plant.");
+      setMessage("Eroare salvare parc.");
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 mt-6 bg-white rounded shadow">
-      <h1 className="text-3xl font-bold text-700 mb-4">Add New Plant</h1>
+      <h1 className="text-3xl font-bold text-gray-700 mb-4">Adaugă parc și configurează setările</h1>
 
       {message && <p className="mb-4 text-sm text-green-600">{message}</p>}
       {api_key && (
         <div className="mb-4 p-3 bg-purple-100 border rounded">
-          <p className="font-semibold">Your API Key (save it securely):</p>
+          <p className="font-semibold">Cheia ta de API (salvează într-un loc sigur):</p>
           <code className="text-sm text-black-800 break-all">{api_key}</code>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Plant Name */}
         <div>
-          <label className="block font-medium">Plant Name</label>
+          <label className="block font-medium">Nume parc</label>
           <input
             type="text"
             value={plantName}
@@ -100,46 +99,47 @@ const ConfigurePlants = () => {
           />
         </div>
 
-        {/* Threshold */}
         <div>
-          <label className="block font-medium">Alert Threshold (%)</label>
+          <label className="block font-medium">Prag alertare (%)</label>
           <input
             type="number"
             value={threshold}
-            onChange={(e) => setThreshold(e.target.value)}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              if (val >= 1 && val <= 99) setThreshold(val);
+              else if (!e.target.value) setThreshold("");
+            }}
             placeholder="e.g. 85"
             className="w-full border border-gray-300 p-2 rounded"
+            min={1}
+            max={99}
           />
         </div>
 
-        {/* Metric Type (For alarm) */}
         <div>
-          <label className="block font-medium">Metric Type</label>
+          <label className="block font-medium">Tip metrică</label>
           <select
             value={metricType}
             onChange={(e) => setMetricType(e.target.value)}
             className="w-full border border-gray-300 p-2 rounded"
           >
-            <option value="yield">Yield (kWh)</option>
-            <option value="power">Peak AC Power (kW)</option>
-            <option value="specific_energy">Specific Energy (kWh/kWp)</option>
+            <option value="yield">Energie produsă (kWh)</option>
+            <option value="power">Energie de vârf (kW)</option>
+            <option value="specific_energy">Energie specifică (kWh/kWp)</option>
           </select>
         </div>
 
-        {/* Ingestion Type */}
         <div>
-          <label className="block font-medium">Ingestion Type</label>
+          <label className="block font-medium">Tip ingestie</label>
           <select
             value={ingestionType}
             onChange={(e) => setIngestionType(e.target.value)}
             className="w-full border border-gray-300 p-2 rounded"
           >
             <option value="API">API Key</option>
-            <option value="s3">AWS S3</option>
           </select>
         </div>
 
-        {/* AWS Settings */}
         {ingestionType === "s3" && (
           <div className="p-4 bg-yellow-50 rounded border">
             <h3 className="font-semibold mb-2">AWS S3 Settings</h3>
@@ -160,14 +160,13 @@ const ConfigurePlants = () => {
           </div>
         )}
 
-        {/* Devices */}
         <div>
-          <label className="block font-medium mb-2">Devices</label>
+          <label className="block font-medium mb-2">Dispozitive</label>
           {devices.map((device, index) => (
             <div key={index} className="space-y-2">
               <input
                 type="text"
-                placeholder={`Device ${index + 1} Name`}
+                placeholder={`Nume dispozitiv ${index + 1}`}
                 value={device.name}
                 onChange={(e) => handleDeviceChange(index, "name", e.target.value)}
                 className="w-full border border-gray-300 p-2 rounded"
@@ -183,7 +182,7 @@ const ConfigurePlants = () => {
               </select>
               <input
                 type="text"
-                placeholder={`Device ${index + 1} Serial Number`}
+                placeholder={`Serie dispozitiv ${index + 1}`}
                 value={device.serial_number}
                 onChange={(e) => handleDeviceChange(index, "serial_number", e.target.value)}
                 className="w-full border border-gray-300 p-2 rounded"
@@ -195,17 +194,16 @@ const ConfigurePlants = () => {
             onClick={addDeviceField}
             className="w-full mt-4 bg-blue-600 text-white p-2 rounded"
           >
-            Add Another Device
+            Adaugă dispozitiv
           </button>
         </div>
 
-        {/* Submit Button */}
         <div>
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white p-2 rounded"
+            className="w-full bg-green-600 text-white p-2 rounded"
           >
-            Create Plant
+            Adaugă parc
           </button>
         </div>
       </form>

@@ -16,13 +16,15 @@ import {
   Marker,
   useMapEvents,
 } from 'react-leaflet';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ro';
 import L from 'leaflet';
 
 const initialInputs = {
   location: {
-    latitude: 45.8,
-    longitude: 16.0,
-    elevation: 115,
+    latitude: 44.4,
+    longitude: 26.1,
+    elevation: 20,
   },
   mounting_system: {
     fixed: {
@@ -108,12 +110,12 @@ const marketPrice = output?.marketPrice || {};
 
   return (
     <div className="max-w-5xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Photovoltaic Estimation</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-700">Estimare producție fotovoltaică</h1>
 
       <form onSubmit={handleSubmit} className="mb-8 space-y-6">
         {/* Location */}
         <fieldset className="border p-4 rounded">
-          <legend className="font-semibold mb-4">Location (Click map to set)</legend>
+          <legend className="font-semibold mb-4">Locație (Click pe hartă pentru a seta)</legend>
 
           <div className="h-64 mb-4">
             <MapContainer
@@ -145,7 +147,7 @@ const marketPrice = output?.marketPrice || {};
           />
 
           <label className="block mb-2">
-            Elevation (m):
+            Altitudine (m):
             <input
               type="number"
               value={inputs.location.elevation}
@@ -160,10 +162,10 @@ const marketPrice = output?.marketPrice || {};
 
         {/* Mounting System */}
         <fieldset className="border p-4 rounded">
-          <legend className="font-semibold mb-2">Mounting System - Fixed</legend>
+          <legend className="font-semibold mb-2">Sistem de montaj - Fix</legend>
 
           <label className="block mb-2">
-            Slope (degrees):
+            Înclinație (grade):
             <input
               type="number"
               value={inputs.mounting_system.fixed.slope}
@@ -178,7 +180,7 @@ const marketPrice = output?.marketPrice || {};
           </label>
 
           <label className="block mb-2">
-            Azimuth (degrees):
+            Azimut (grade):
             <input
               type="number"
               value={inputs.mounting_system.fixed.azimuth}
@@ -193,7 +195,7 @@ const marketPrice = output?.marketPrice || {};
           </label>
 
           <label className="block mb-2">
-            Type:
+            Tip:
             <select
               value={inputs.mounting_system.fixed.type}
               onChange={(e) =>
@@ -202,19 +204,19 @@ const marketPrice = output?.marketPrice || {};
               className="ml-2 border rounded px-2 py-1"
               required
             >
-              <option value="free-standing">Free-standing</option>
-              <option value="roof-mounted">Roof-mounted</option>
-              <option value="other">Other</option>
+              <option value="free-standing">Structură proprie</option>
+              <option value="roof-mounted">Montat pe acoperiș</option>
+              <option value="other">Alt tip</option>
             </select>
           </label>
         </fieldset>
 
         {/* PV Module */}
         <fieldset className="border p-4 rounded">
-          <legend className="font-semibold mb-2">PV Module</legend>
+          <legend className="font-semibold mb-2">Modul fotovoltaic</legend>
 
           <label className="block mb-2">
-            Peak Power (kW):
+            Putere maximă instantanee (kW):
             <input
               type="number"
               step="0.1"
@@ -229,7 +231,7 @@ const marketPrice = output?.marketPrice || {};
           </label>
 
           <label className="block mb-2">
-            System Loss (%):
+            Pierderi sistem (%):
             <input
               type="number"
               step="0.1"
@@ -250,18 +252,18 @@ const marketPrice = output?.marketPrice || {};
           className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
           disabled={loading}
         >
-          {loading ? 'Calculating...' : 'Calculate'}
+          {loading ? 'Simulează...' : 'Simulează'}
         </button>
 
-        {error && <p className="text-red-600 mt-2">Error: {error}</p>}
+        {error && <p className="text-red-600 mt-2">Eroare: {error}</p>}
       </form>
 
       {output && (
         <>
-          <h2 className="text-xl font-semibold mb-4">Results</h2>
+          <h2 className="text-xl font-semibold mb-4">Rezultate</h2>
 
           <div className="mb-8">
-            <h3 className="font-semibold mb-2">Monthly Energy Production</h3>
+            <h3 className="font-semibold mb-2">Producție lunară de energie</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart
                 data={monthlyData.map((m, idx) => ({
@@ -271,17 +273,17 @@ const marketPrice = output?.marketPrice || {};
                 margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" label={{ value: 'Month', position: 'insideBottomRight', offset: -5 }} />
-                <YAxis label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip formatter={(value) => [`${value} kWh`, 'Energy']} />
+                <XAxis dataKey="month" label={{ value: 'Luna', position: 'insideBottomRight', offset: -5 }} />
+                <YAxis label={{ value: 'Energie (kWh)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip formatter={(value) => [`${value} kWh`, 'Energie']} />
                 <Legend />
-                <Line type="monotone" dataKey="energy" name="Energy (kWh)" stroke="#8884d8" />
+                <Line type="monotone" dataKey="energy" name="Energie (kWh)" stroke="#8884d8" />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
           <div className="mb-8">
-            <h3 className="font-semibold mb-2">Monthly Solar Irradiation</h3>
+            <h3 className="font-semibold mb-2">Radiație solară lunară</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart
                 data={monthlyData.map((m, idx) => ({
@@ -290,51 +292,43 @@ const marketPrice = output?.marketPrice || {};
                 }))}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" label={{ value: 'Month', position: 'insideBottomRight', offset: -5 }} />
-                <YAxis label={{ value: 'Irradiation (kWh/m²)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip formatter={(value) => [`${value} kWh/m²`, 'Irradiation']} />
+                <XAxis dataKey="month" label={{ value: 'Luna', position: 'insideBottomRight', offset: -5 }} />
+                <YAxis label={{ value: 'Radiație (kWh/m²)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip formatter={(value) => [`${value} kWh/m²`, 'Radiație solară']} />
                 <Legend />
-                <Line type="monotone" dataKey="irradiation" name="Irradiation (kWh/m²)" stroke="#82ca9d" />
+                <Line type="monotone" dataKey="irradiation" name="Radiație (kWh/m²)" stroke="#82ca9d" />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <div className="bg-gray-100 p-4 rounded shadow">
-              <h4 className="font-semibold">Annual Energy (kWh)</h4>
+              <h4 className="font-semibold">Energie anuală (kWh)</h4>
               <p>{totalData.E_y?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
-              <h4 className="font-semibold">Annual Irradiation (kWh/m²)</h4>
+              <h4 className="font-semibold">Radiație solară anuală (kWh/m²)</h4>
               <p>{totalData["H(i)_y"]?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-100 p-4 rounded shadow">
-              <h4 className="font-semibold">Total Losses (%)</h4>
+              <h4 className="font-semibold">Pierderi totale (%)</h4>
               <p>{totalData.l_total?.toFixed(2) || '-'}</p>
-            </div>
-            <div className="bg-gray-100 p-4 rounded shadow">
-              <h4 className="font-semibold">Std Dev</h4>
-              <p>{totalData.SD_y?.toFixed(3) || '-'}</p>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-4 gap-4">
+          <div className="mt-6 grid grid-cols-3 gap-4">
             <div className="bg-gray-50 p-4 rounded border">
-              <h5 className="font-semibold">AOI Loss (%)</h5>
-              <p>{totalData.l_aoi?.toFixed(2) || '-'}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded border">
-              <h5 className="font-semibold">Spectral Loss (%)</h5>
+              <h5 className="font-semibold">Pierdere de convergență spectrală (%)</h5>
               <p>{parseFloat(totalData.l_spec)?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded border">
-              <h5 className="font-semibold">Temperature Loss (%)</h5>
+              <h5 className="font-semibold">Pierdere de temperatură (%)</h5>
               <p>{totalData.l_tg?.toFixed(2) || '-'}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded border">
-              <h5 className="font-semibold">PZU price for {marketPrice.month_year}</h5>
+              <h5 className="font-semibold">Preț pentru ziua urmatoare (PZU) al perioadei: {dayjs(marketPrice.month_year).locale('ro').format('MMMM YYYY')}</h5>
               <p>{marketPrice.price_lei_per_MWh.toFixed(2)} RON/mWh</p>
-              <p>Estimated: {((marketPrice.price_lei_per_MWh / 1000) * (totalData.E_y ?? 0)).toFixed(2)} RON</p>
+              <p>Câștig estimat: {((marketPrice.price_lei_per_MWh / 1000) * (totalData.E_y ?? 0)).toFixed(2)} RON</p>
             </div>
           </div>
 

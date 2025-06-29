@@ -1,5 +1,8 @@
 import './App.css';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { fetchCurrentUser } from "./redux/slices/authSlice";
 import HelloPage from "./HelloPage";
 import RegisterPage from "./components/Auth/RegisterPage";
 import LoginPage from "./components/Auth/LoginPage";
@@ -19,10 +22,15 @@ import ConfirmEmailPage from './components/ConfirmEmailPage';
 import SystemAvailability from './components/SystemAvailability';
 import ResetPassword from './components/Auth/ResetPassword';
 import ProtectedRoute from "./ProtectedRoute";
+import DemoDashboard from './components/Dashboards/DemoDashboard';
 
 
 function App() {
+  const dispatch = useDispatch();
 
+  useEffect(() => {
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
   return (
     <Router>
       <Navbar />
@@ -35,6 +43,8 @@ function App() {
         <Route path="/confirm-email/:uidb64/:token" element={<ConfirmEmailPage />} />
         <Route path="/estimate-pv" element={<PvEstimation />} />
         <Route path="/reset-password/:uidb64/:token" element={<ResetPassword />} />
+        <Route path="/demo-dashboard" element={<DemoDashboard />} />
+
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={

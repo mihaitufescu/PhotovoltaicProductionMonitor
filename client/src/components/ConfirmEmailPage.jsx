@@ -12,10 +12,10 @@ const ConfirmEmailPage = () => {
     const confirm = async () => {
       try {
         const data = await confirmEmail(uidb64, token);
-        setMessage(data.detail || '✅ Email confirmed successfully!');
+        setMessage('Email confirmat!');
         setSuccess(true);
       } catch (err) {
-        setMessage(err.detail || '❌ Invalid or expired confirmation link.');
+        setMessage('Link invalid sau expirat.');
         setSuccess(false);
       } finally {
         setLoading(false);
@@ -29,7 +29,7 @@ const ConfirmEmailPage = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="bg-white shadow-lg rounded-lg p-6 max-w-md w-full text-center">
         {loading ? (
-          <p className="text-blue-600">Verifying your email...</p>
+          <p className="text-blue-600">Verificam link-ul...</p>
         ) : (
           <>
             <p className={`text-lg font-semibold ${success ? 'text-green-600' : 'text-red-600'}`}>
@@ -39,7 +39,7 @@ const ConfirmEmailPage = () => {
             {success && (
               <Link to="/login">
                 <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  Go to Login
+                  Du-te la autentificare
                 </button>
               </Link>
             )}

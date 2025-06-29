@@ -21,5 +21,5 @@ def convert_xlxs_to_csv(load_path: str) -> str:
     df = pd.read_excel(load_path, header=1)
     df.to_csv(csv_save_path, index=False)
 
-    print(f"✅ Excel to CSV conversion done: {csv_save_path}")
+    print(f"Excel to CSV conversion done: {csv_save_path}")
     return csv_save_path

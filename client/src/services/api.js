@@ -19,17 +19,13 @@ API.interceptors.response.use(
         originalRequest._retryCount += 1;
 
         try {
-          await axios.post('/api/refresh-cookie/', {}, { withCredentials: true });
-          return API(originalRequest); // retry once
+          await API.post('/api/refresh-cookie/', {}, { withCredentials: true });
+          return API(originalRequest); 
         } catch (refreshError) {
           console.error("Refresh token expired or invalid");
         }
       }
 
-    // Cleanup + redirect only once
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    // window.location.href = '/login';
     }
 
   return Promise.reject(error);
@@ -65,7 +61,7 @@ export const logoutUser = async (navigateCallback) => {
 
 export const createPlant = async (payload) => {
   try {
-    const response = await axios.post('api/create-plant/', payload, {
+    const response = await API.post('api/create-plant/', payload, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -129,7 +125,7 @@ export const deleteDevice = async (deviceId) => {
 };
 
 export const uploadPlantData = async (plantId, file) => {
-  if (!file) throw new Error("No file provided");
+  if (!file) throw new Error("Nu au fost selectat niciun fisier");
 
   const formData = new FormData();
   formData.append('file', file);
@@ -222,29 +218,29 @@ export const updateAlarmSettings = async (plantId, data) => {
 };
 
 export const getCurrentUserInfo = async () => {
-  const response = await axios.get(`api/user/get/`);
+  const response = await API.get(`api/user/get/`);
   return response.data;
 };
 
 export const updateCurrentUser = async (payload) => {
-  const response = await axios.put(`api/user/update/`, payload);
+  const response = await API.put(`api/user/update/`, payload);
   return response.data;
 };
 
 export const confirmEmail = async (uidb64, token) => {
   try {
-    const response = await axios.get(
+    const response = await API.get(
       `/api/confirm-email/${uidb64}/${token}/`
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data || { detail: 'Something went wrong' };
+    throw error.response?.data || { detail: 'Eroare server' };
   }
 };
 
 export const deleteCurrentUser = async () => {
   try {
-    const response = await axios.delete('/api/user/delete_current_user/');
+    const response = await API.delete('/api/user/delete_current_user/');
     return response.data;
   } catch (error) {
     throw error.response?.data || { detail: 'Something went wrong' };
@@ -269,7 +265,7 @@ export const resetPassword = async (uidb64, token, newPassword) => {
 
 export const fetchSystemAvailability = async () => {
   try {
-    const response = await axios.get('/api/system-availability/');
+    const response = await API.get('/api/system-availability/');
     return response.data;
   } catch (error) {
     console.error('Error fetching system availability:', error);

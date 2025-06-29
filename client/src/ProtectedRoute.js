@@ -5,19 +5,22 @@ import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
   const dispatch = useDispatch();
-  const { user, loading } = useSelector((state) => state.auth);
+  const { user, loading, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (!user) {
-      dispatch(fetchCurrentUser());
-    }
-  }, [user, dispatch]);
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading || user === null) {
+    return <div>Încărcare...</div>;
+  }
 
-  if (!user) return <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   return children;
 };
+
 
 export default ProtectedRoute;

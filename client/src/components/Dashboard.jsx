@@ -4,96 +4,96 @@ import { Link } from "react-router-dom";
 const Dashboard = () => {
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-4xl font-bold text-900 mb-6">Dashboard</h1>
+      <h1 className="text-4xl font-bold text-gray-600 mb-6">Panou de control</h1>
       {/* Configure plants Section */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Configure plants data ingestion</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Configureză ingestia de date</h2>
         <div className="mt-4">
           <p className="text-gray-600 mb-4">
-            Go to the configuration page to manage API access and infrastructure settings.
+            Setează parcul tau si obtine o cheie de API pentru procese automate de încărcare de date.
           </p>
           <Link
             to="/configure-plants"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            Go to Configuration
+            Setează
           </Link>
         </div>
       </div>
 
       {/* Plants Overview Section */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Plants Overview</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Ansamblu general de parcuri</h2>
         <div className="mt-4">
           <p className="text-gray-600 mb-4">
-            View all your plants, devices, and alarm settings in a single place.
+            Vizualizează parcurile existente, dispozitivele asociate și setările de alertare.
           </p>
           <Link
             to="/plants-overview"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            Go to Overview
+            Vizualizează
           </Link>
         </div>
       </div>
 
       {/* Plants Ingestion Section */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Ingest data for plants</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Încarcă date asociate parcurilor</h2>
         <div className="mt-4">
           <p className="text-gray-600 mb-4">
-            View all your plants and upload availble data.
+            Selectează un parc și încarcă date sau informează-te despre cum poți să automtizezi procesul de ingestie de date.
           </p>
           <Link
             to="/plants-ingestion"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            Go to plant ingestion
+            Încarcă
           </Link>
         </div>
       </div>
 
       {/* Solar Yield Button */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">View reports for all plants</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Vezi raporte de producție</h2>
         <div className="mt-4">
            <p className="text-gray-600 mb-4">
-            View or download reports for all installed plants.
+            Vezi raporte de producție sau descarcă.
           </p>
           <Link
             to="/aggregated_report"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            View reports
+            Vizualizează
           </Link>
         </div>
       </div>
 
       {/* Set Threshold Button */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Configure alarms thresholds</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Setează praguri de alertare</h2>
         <div className="mt-4">
            <p className="text-gray-600 mb-4">
-            Configure or modify alarms thresholds.
+            Setează praguri de alertare sau modifică proprietățile existente.
           </p>
           <Link
             to="/alarm_settings"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            Configure
+            Setează
           </Link>
         </div>
       </div>
 
       {/* Set System Availability Button */}
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">View System Availability</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">Vezi gradul de disponibilitate al sistemului</h2>
         <div className="mt-4">
           <Link
             to="/system_availability"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-300"
           >
-            View
+            Vizualizează
           </Link>
         </div>
       </div>

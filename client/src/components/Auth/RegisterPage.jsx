@@ -26,7 +26,21 @@ const RegisterPage = () => {
     setMessage('');
 
     if (formData.password !== formData.password2) {
-      setError("Passwords don't match!");
+      setError("Parolele nu se potrivesc!");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError("Parola trebuie să aibă cel puțin 8 caractere.");
+      return;
+    }
+
+    const hasNumber = /\d/.test(formData.password);
+    const hasUpper = /[A-Z]/.test(formData.password);
+    const hasLower = /[a-z]/.test(formData.password);
+
+    if (!hasNumber || !hasUpper || !hasLower) {
+      setError("Parola trebuie să conțină litere mari, litere mici și cel puțin o cifră.");
       return;
     }
 
@@ -35,12 +49,12 @@ const RegisterPage = () => {
 
     try {
       await registerUser(payload);
-      setMessage('✅ Registered successfully! Please check your email for confirmation.');
+      setMessage('Inregistrat cu succes. Verifica email-ul pentru a confirma contul.');
     } catch (err) {
       if (err.response && err.response.data) {
-        setError('❌ ' + JSON.stringify(err.response.data));
+        setError(JSON.stringify(err.response.data));
       } else {
-        setError('❌ Registration failed. Try again.');
+        setError('Inregistrarea a eșuat. Încearcă mai târziu!');
       }
     }
   };
@@ -48,7 +62,7 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
-        <h2 className="text-4xl font-semibold text-green-900 mb-6 text-center md:text-left">Create Your Account</h2>
+        <h2 className="text-4xl font-semibold text-green-900 mb-6 text-center md:text-left">Creează cont</h2>
 
         {error && (
           <div className="mb-6 px-4 py-3 bg-red-100 text-red-700 rounded-lg border border-red-300 text-center">
@@ -64,13 +78,13 @@ const RegisterPage = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {[
             { name: 'email', label: 'Email', type: 'email' },
-            { name: 'first_name', label: 'First Name', type: 'text' },
-            { name: 'last_name', label: 'Last Name', type: 'text' },
-            { name: 'address', label: 'Address', type: 'text' },
-            { name: 'city', label: 'City', type: 'text' },
-            { name: 'country', label: 'Country', type: 'text' },
-            { name: 'password', label: 'Password', type: 'password' },
-            { name: 'password2', label: 'Confirm Password', type: 'password' },
+            { name: 'first_name', label: 'Prenume', type: 'text' },
+            { name: 'last_name', label: 'Nume', type: 'text' },
+            { name: 'address', label: 'Adresă', type: 'text' },
+            { name: 'city', label: 'Oraș', type: 'text' },
+            { name: 'country', label: 'Țară', type: 'text' },
+            { name: 'password', label: 'Parola', type: 'password' },
+            { name: 'password2', label: 'Confirma parolă', type: 'password' },
           ].map(({ name, label, type }) => (
             <div key={name} className="flex flex-col">
               <label htmlFor={name} className="mb-2 text-gray-700 font-semibold">
@@ -92,7 +106,7 @@ const RegisterPage = () => {
             type="submit"
             className="w-full bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition font-semibold shadow-md"
           >
-            Register
+            Inregistrare
           </button>
         </form>
       </div>

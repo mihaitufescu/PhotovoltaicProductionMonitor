@@ -21,7 +21,7 @@ const UserSettings = () => {
         const response = await getCurrentUserInfo();
         setFormData(response.data);
       } catch (error) {
-        setMessage('Failed to load user data.');
+        setMessage('Datele nu au fost încărcate.');
       } finally {
         setLoading(false);
       }
@@ -43,51 +43,52 @@ const UserSettings = () => {
 
     try {
       const response = await updateCurrentUser(formData);
-      setMessage(response.message);
+      if (response) setMessage('Utilizatorul a fost actualizat');
     } catch (error) {
-      const errorMsg = error.response?.data?.error || 'Update failed.';
+      const errorMsg = 'Eroare actualizare.';
       setMessage(errorMsg);
     }
   };
  const dispatch = useDispatch();
  const handleDelete = async () => {
-  const confirmed = window.confirm('Are you sure you want to delete your account? This action cannot be undone.');
+  const confirmed = window.confirm('Ești sigur ca vrei să ștergi contul? Această operație este ireversibilă.');
   if (!confirmed) return;
 
   try {
-        // 🔒 Immediately disable axios interceptor retries
         API.interceptors.response.handlers = [];
 
         await deleteCurrentUser();
 
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-
-        // Optional: clear redux or context
         dispatch(logout());
 
         window.location.replace('/login');
 
     } catch (error) {
-        const errMsg = error?.response?.data?.detail || 'Failed to delete account.';
+        const errMsg = 'Eroare ștergere cont.';
         setMessage(errMsg);
     }
     };
 
-  if (loading) return <div className="p-6">Loading user info...</div>;
+  if (loading) return <div className="p-6">Încarcare informații...</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">User Settings</h1>
+      <h1 className="text-2xl font-bold mb-4">Setări utilizator</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {['first_name', 'last_name', 'address', 'city', 'country'].map((field) => (
-          <div key={field}>
-            <label className="block font-medium capitalize">{field.replace('_', ' ')}:</label>
+        {[
+          { name: 'first_name', label: 'Prenume' },
+          { name: 'last_name', label: 'Nume' },
+          { name: 'address', label: 'Adresă' },
+          { name: 'city', label: 'Oraș' },
+          { name: 'country', label: 'Țară' },
+        ].map(({ name, label }) => (
+          <div key={name}>
+            <label className="block font-medium">{label}:</label>
             <input
               type="text"
-              name={field}
-              value={formData[field]}
+              name={name}
+              value={formData[name]}
               onChange={handleChange}
               className="border border-gray-300 rounded px-3 py-2 w-full"
               required
@@ -100,7 +101,7 @@ const UserSettings = () => {
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
           >
-            Save Changes
+            Salveză
           </button>
 
           <button
@@ -108,14 +109,14 @@ const UserSettings = () => {
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
           >
-            Delete Account
+            Șterge cont
           </button>
         </div>
       </form>
 
       {message && (
         <p className="mt-4 text-sm">
-          {message.startsWith('User') ? (
+          {message.startsWith('Utilizatorul') ? (
             <span className="text-green-600">{message}</span>
           ) : (
             <span className="text-red-600">{message}</span>

@@ -26,24 +26,24 @@ const LoginPage = () => {
     const { email, password } = formData;
 
     if (!email || !password) {
-      setError("Please fill in all fields.");
+      setError("Completează toate câmpurile.");
       return;
     }
 
     try {
         await dispatch(login({ email, password })).unwrap();
-        setMessage("✅ Login successful!");
+        setMessage("Autentificare reușită!");
         navigate("/dashboard");
     } catch (err) {
         console.error(err);
-        setError("❌ Invalid credentials or server error.");
+        setError("Datele sunt invalide sau a fost produsă o eroare de server.");
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-12 p-8 bg-white rounded-lg shadow-lg">
       <h2 className="text-4xl font-semibold text-green-900 mb-6 text-center md:text-left">
-        Login to Your Account
+        Panou autentificare
       </h2>
 
       {error && (
@@ -81,7 +81,7 @@ const LoginPage = () => {
             htmlFor="password"
             className="block mb-2 font-semibold text-gray-700"
           >
-            Password
+            Parolă
           </label>
           <input
             type="password"
@@ -100,14 +100,14 @@ const LoginPage = () => {
             onClick={() => setShowForgotModal(true)}
             className="text-sm text-green-600 hover:text-green-800 font-medium"
           >
-            Forgot Password?
+            Ai uitat parola?
           </button>
 
           <button
             type="submit"
             className="w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition"
           >
-            Login
+            Autentificare
           </button>
         </div>
       </form>

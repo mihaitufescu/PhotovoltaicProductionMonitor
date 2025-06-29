@@ -46,13 +46,12 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
         res = Response({'message': 'Login successful'})
 
-        # Set secure cookies
         cookie_exp = now() + timedelta(days=1)
         res.set_cookie(
             key='access_token',
             value=str(access),
             httponly=True,
-            secure=False,  # Set True in production
+            secure=False,
             samesite='Lax',
             expires=cookie_exp
         )
@@ -86,7 +85,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             key='access_token',
             value=access,
             httponly=True,
-            secure=False,  # Set to True in production
+            secure=False,
             samesite='Lax',
             expires=now() + timedelta(minutes=30)
         )
@@ -110,16 +109,13 @@ class UserRegisterView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        user.is_active = True  # allow login (or leave False if you want to block unconfirmed)
+        user.is_active = True  
         user.save()
-
-        # Generate confirmation link
         link = generate_confirmation_link(user)
 
-        # Send email
         send_mail(
-            subject="Confirm your email for Photovoltaic Production Monitor 🌞",
-            message=f"Hello {user.first_name},\n\nClick this link to confirm your email:\n{link}\n\nThanks!",
+            subject="Confirmă adresa de email",
+            message=f"Salut {user.first_name},\n\nClick pe link pentru a confirma contul tau:\n{link}\n\nMultumim!",
             from_email=None,
             recipient_list=[user.email],
             fail_silently=False,
@@ -209,7 +205,6 @@ class CreatePlantView(APIView):
 
             return Response(response_data, status=status.HTTP_201_CREATED)
 
-        # Return error if validation fails
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class PlantOverviewAPIView(APIView):
@@ -410,14 +405,12 @@ class PlantDataIngestionView(APIView):
 
             dagster_response = response.json()
 
-            # Check if there are errors inside the data response
             data_resp = dagster_response.get('data', {})
             launch_resp = data_resp.get('launchPipelineExecution', {})
 
             if 'errors' in dagster_response:
                 return Response({"error": "Failed to trigger processing job", "details": dagster_response['errors']}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             if launch_resp.get('__typename') != 'LaunchRunSuccess':
-                # Return errors from validation or python errors in the mutation response
                 return Response({"error": "Processing job failed", "details": launch_resp}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             return Response({
@@ -450,7 +443,6 @@ class PlantCustomDataIngestionView(APIView):
             if not matched_setting:
                 return Response({"error": "Invalid or expired API key"}, status=status.HTTP_403_FORBIDDEN)
 
-            # Now fetch the plant using select_related to avoid second query
             matched_setting = ApiKeyIngestionSettings.objects.select_related('plant').get(id=matched_setting.id)
             plant = matched_setting.plant
             plant_id = plant.id
@@ -489,7 +481,6 @@ class PlantCustomDataIngestionView(APIView):
             if 'plant_id' not in entry:
                 entry['plant_id'] = plant_id
 
-            # Build variables dict for mutation
             execution_params = {
                 "selector": {
                     "jobName": "file_ingestion_pipeline",
@@ -560,14 +551,12 @@ class PlantCustomDataIngestionView(APIView):
 
             dagster_response = response.json()
 
-            # Check if there are errors inside the data response
             data_resp = dagster_response.get('data', {})
             launch_resp = data_resp.get('launchPipelineExecution', {})
 
             if 'errors' in dagster_response:
                 return Response({"error": "Failed to trigger Dagster job", "details": dagster_response['errors']}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             if launch_resp.get('__typename') != 'LaunchRunSuccess':
-                # Return errors from validation or python errors in the mutation response
                 return Response({"error": "Dagster job failed", "details": launch_resp}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             return Response({
@@ -589,7 +578,6 @@ class PlantGetData(APIView):
             plant_name = "Unknown Plant"
         data_qs = PlantData.objects.filter(plant_id=plant_id, is_valid=True).order_by('read_date')
 
-        # Prepare data for charting
         histogram_data = {
             "dates": [entry.read_date.strftime("%Y-%m-%d") for entry in data_qs],
             "yield_kwh": [entry.yield_kwh for entry in data_qs],
@@ -597,10 +585,8 @@ class PlantGetData(APIView):
             "peak_ac_power_kw": [entry.peak_ac_power_kw for entry in data_qs],
             "grid_connection_duration_h": [entry.grid_connection_duration_h for entry in data_qs],
         }
-
-        # Summary stats (optional for dashboard header)
         stats_summary = data_qs.aggregate(
-            total_yield_kwh=Sum("yield_kwh"), #posibil sa trebuiasca sa inlocuiesc cu total yield din invertor, de discutat cu profesorul
+            total_yield_kwh=Sum("yield_kwh"), 
             avg_specific_energy=Avg("specific_energy_kwh_per_kwp"),
             max_peak_power=Max("peak_ac_power_kw"),
             total_grid_duration=Sum("grid_connection_duration_h"),
@@ -612,7 +598,6 @@ class PlantGetData(APIView):
             .annotate(count=Count('id'))
         )
 
-        # Structure device count response
         device_summary = {
             device['device_type']: device['count']
             for device in device_counts
@@ -626,7 +611,7 @@ class PlantGetData(APIView):
         })
     
 class PlantPvEstimation(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         try:
@@ -638,7 +623,6 @@ class PlantPvEstimation(APIView):
             if num_panels and panel_power_kw:
                 peak_power = float(num_panels) * float(panel_power_kw)
             else:
-                # Fall back to direct peak_power input
                 peak_power = float(request.data.get("peak_power", 5.0))
             tilt = float(request.data.get("tilt", 30))               
             azimuth = float(request.data.get("azimuth", 0))          
@@ -647,7 +631,6 @@ class PlantPvEstimation(APIView):
             year_min = request.data.get("year_min", 2005)
             year_max = request.data.get("year_max", 2023)           
 
-            # Call PVGIS API
             pvgis_url = "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc"
             params = {
                 "lat": lat,
@@ -672,9 +655,6 @@ class PlantPvEstimation(APIView):
                 "pvgis_data": data,
                 "market_price": opcom_price,
             })
-
-
-            return Response(data)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
@@ -684,7 +664,6 @@ class AggregatedPlantDataView(APIView):
     def get(self, request):
         user = request.user
 
-        # Only consider data for plants belonging to the current user
         plant_data = PlantData.objects.filter(plant__user=user, is_valid=True)
 
         def aggregate_by(time_trunc):
@@ -788,48 +767,47 @@ class ForgotPasswordView(APIView):
     def post(self, request):
         email = request.data.get('email')
         if not email:
-            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Introdu adresa de email.'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             user = User.objects.get(email=email)
 
             if not user.is_email_confirmed:
-                return Response({'error': 'Encountered issues'}, status=status.HTTP_403_FORBIDDEN)
+                return Response({'error': 'Eroare de server'}, status=status.HTTP_403_FORBIDDEN)
             
             reset_url = generate_reset_token(user)
 
             send_mail(
-                subject="Reset Your Password",
-                message=f"Click the link to reset your password: {reset_url}",
+                subject="Resetează parola",
+                message=f"Click pentru a reseta parola: {reset_url}",
                 from_email=None,
                 recipient_list=[user.email],
             )
 
-            return Response({'message': 'Password reset link sent.'})
+            return Response({'message': 'Email-ul a fost trimis.'})
         except User.DoesNotExist:
-            # For security, don’t reveal if email exists
-            return Response({'message': 'Encountered issues.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'message': 'Eroare.'}, status=status.HTTP_403_FORBIDDEN)
 
 class ResetPasswordView(APIView):
     def post(self, request, uidb64, token):
         new_password = request.data.get('new_password')
 
         if not new_password:
-            return Response({'error': 'New password is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Introdu parola nouă'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
         except (User.DoesNotExist, ValueError, TypeError, OverflowError):
-            return Response({'error': 'Invalid link'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Link invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
         if not default_token_generator.check_token(user, token):
-            return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Link invalid sau token expirat'}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save()
 
-        return Response({'message': 'Password has been reset successfully.'})
+        return Response({'message': 'Parola a fost resetată.'})
     
 class SystemAvailabilityView(APIView):
     permission_classes = [IsAuthenticated]

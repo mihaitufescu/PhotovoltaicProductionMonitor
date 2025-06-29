@@ -36,9 +36,9 @@ const AlarmSettings = () => {
         metric_type: metricType,
         threshold_value: parseFloat(thresholdValue),
       });
-      setMessage(`${response.message || 'Succesfull: Alarm updated successfully'}`);
+      setMessage(`${response.message || 'Succes: Alarma a fost actualizată'}`);
     } catch (error) {
-      const errorMsg = error.response?.data?.error || 'Update failed. Try again.';
+      const errorMsg = error.response?.data?.error || 'Acțiunea a eșuat. Încearcă din nou.';
       setMessage(errorMsg);
     } finally {
       setUpdating(false);
@@ -47,16 +47,16 @@ const AlarmSettings = () => {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Update Alarm Threshold</h2>
+      <h2 className="text-2xl font-bold mb-4">Actulizare prag alertare</h2>
 
       <div className="mb-4">
-        <label className="block mb-2 font-medium">Select Plant:</label>
+        <label className="block mb-2 font-medium">Selectază parc:</label>
         <select
           value={selectedPlantId}
           onChange={(e) => setSelectedPlantId(e.target.value)}
           className="border border-gray-300 rounded p-2 w-full"
         >
-          <option value="">-- Select a plant --</option>
+          <option value="">-- Selectază un parc: --</option>
           {plants.map((plantObj) => (
             <option key={plantObj.plant.id} value={plantObj.plant.id}>
               {plantObj.plant.plant_name}
@@ -66,20 +66,20 @@ const AlarmSettings = () => {
       </div>
 
       <div className="mb-4">
-        <label className="block mb-2 font-medium">Select Metric Type:</label>
+        <label className="block mb-2 font-medium">Selectă tip prag:</label>
         <select
           value={metricType}
           onChange={(e) => setMetricType(e.target.value)}
           className="border border-gray-300 rounded p-2 w-full"
         >
-          <option value="yield">Yield</option>
-          <option value="power">Power</option>
-          <option value="specific_energy">Specific Energy</option>
+          <option value="yield">Producție energie</option>
+          <option value="power">Putere de vârf</option>
+          <option value="specific_energy">Energie specifică</option>
         </select>
       </div>
 
       <div className="mb-4">
-        <label className="block mb-2 font-medium">Threshold (%):</label>
+        <label className="block mb-2 font-medium">Prag (%):</label>
         <input
           type="number"
           value={thresholdValue}
@@ -95,12 +95,12 @@ const AlarmSettings = () => {
         disabled={updating}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
       >
-        {updating ? 'Updating...' : 'Update Alarm'}
+        {updating ? 'Actualizare...' : 'Actualizare'}
       </button>
 
       {message && (
         <p className="mt-4 text-sm">
-          {message.startsWith('Succesfull') ? (
+          {message.startsWith('Succes') ? (
             <span className="text-green-600">{message}</span>
           ) : (
             <span className="text-red-600">{message}</span>
