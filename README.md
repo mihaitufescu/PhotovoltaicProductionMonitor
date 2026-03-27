@@ -60,15 +60,14 @@ All components are containerized using **Docker** to ensure portability, ease of
 
 ## Technology Stack
 
-| Component        | Technology          |
-|------------------|---------------------|
-| Frontend         | React               |
-| Backend API      | Django REST         |
-| Database         | PostgreSQL          |
-| Workflow Engine  | Dagster             |
-| Containerization | Docker              |
-| Optional (Future)| Apache Kafka        |
-| CI/CD (Optional) | GitHub Actions, Docker Compose |
+| Component        | Technology                  |
+|------------------|-----------------------------|
+| Frontend         | React                       |
+| Backend API      | Django REST                 |
+| Database         | PostgreSQL                  |
+| Workflow Engine  | Dagster                     |
+| Containerization | Docker                      |
+| (Future)         | Apache Kafka, GitHub Actions|
 
 ---
 
